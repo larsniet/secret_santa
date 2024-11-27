@@ -1,46 +1,105 @@
-# Getting Started with Create React App
+# Secret Santa App Deployment Guide
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Project Structure
 
-## Available Scripts
+```
+secret_santa/
+├── backend/         # Express.js backend
+├── frontend/        # React frontend
+└── README.md       # This file
+```
 
-In the project directory, you can run:
+## Deployment Steps
 
-### `npm start`
+### 1. Backend Deployment (Render.com)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+1. Go to [Render.com](https://render.com) and create an account
+2. Click "New +" and select "Web Service"
+3. Connect your GitHub repository
+4. Configure the Web Service:
+   - Name: `secret-santa-backend`
+   - Environment: `Node`
+   - Build Command: `npm install`
+   - Start Command: `node server.js`
+   - Root Directory: `backend`
+5. Add Environment Variables:
+   ```
+   MONGODB_URI=your_mongodb_connection_string
+   PORT=5001
+   SMTP_HOST=smtp.hostinger.com
+   SMTP_PORT=465
+   SMTP_USER=your_email
+   SMTP_PASS=your_password
+   SMTP_FROM="Father Christmas <your_email>"
+   ```
+6. Click "Create Web Service"
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### 2. Frontend Deployment (Render.com)
 
-### `npm test`
+1. In Render.com, click "New +" and select "Static Site"
+2. Connect your GitHub repository
+3. Configure the Static Site:
+   - Name: `secret-santa-frontend`
+   - Build Command: `npm install && npm run build`
+   - Publish Directory: `build`
+   - Root Directory: `frontend`
+4. Add Environment Variables:
+   ```
+   REACT_APP_API_URL=https://your-backend-url.onrender.com/api
+   REACT_APP_ADMIN_PASSWORD=your_admin_password
+   ```
+5. Click "Create Static Site"
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 3. Update Frontend API URL
 
-### `npm run build`
+After both services are deployed:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Get your backend URL from Render.com
+2. Update the `REACT_APP_API_URL` in the frontend's environment variables on Render.com
+3. Trigger a new deployment of the frontend
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Local Development
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Backend
 
-### `npm run eject`
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Frontend
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd frontend
+npm install
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Environment Variables
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Backend (.env)
 
-## Learn More
+```
+MONGODB_URI=your_mongodb_connection_string
+PORT=5001
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_USER=your_email
+SMTP_PASS=your_password
+SMTP_FROM="Father Christmas <your_email>"
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Frontend (.env.production)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+REACT_APP_API_URL=https://your-backend-url.onrender.com/api
+REACT_APP_ADMIN_PASSWORD=your_admin_password
+```
+
+## Important Notes
+
+1. Make sure to update the CORS settings in the backend if needed
+2. Keep your admin password secure
+3. Never commit sensitive environment variables to Git
+4. MongoDB connection string should be from your MongoDB Atlas cluster
