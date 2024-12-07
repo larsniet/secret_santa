@@ -6,8 +6,23 @@ import { Testimonials } from "../components/home/Testimonials";
 import { Pricing } from "../components/home/Pricing";
 import { FAQ } from "../components/home/FAQ";
 
+// Preload the hero image
+const preloadHeroImage = () => {
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "image";
+  link.href = "/images/hero-600.webp";
+  link.type = "image/webp";
+  document.head.appendChild(link);
+};
+
 export const Home: React.FC = () => {
   const { isAuthenticated } = useAuth();
+
+  // Preload hero image on component mount
+  React.useEffect(() => {
+    preloadHeroImage();
+  }, []);
 
   return (
     <Layout>
@@ -61,30 +76,23 @@ export const Home: React.FC = () => {
           <picture>
             <source
               type="image/webp"
-              srcSet="
-                /images/hero-600.webp 600w,
-                /images/hero-1200.webp 1200w,
-                /images/hero-1800.webp 1800w
-              "
-              sizes="(max-width: 768px) 100vw, 50vw"
+              srcSet="/images/hero-600.webp 600w, /images/hero-1200.webp 1200w"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw"
             />
             <source
               type="image/jpeg"
-              srcSet="
-                /images/hero-600.jpg 600w,
-                /images/hero-1200.jpg 1200w,
-                /images/hero-1800.jpg 1800w
-              "
-              sizes="(max-width: 768px) 100vw, 50vw"
+              srcSet="/images/hero-600.jpg 600w, /images/hero-1200.jpg 1200w"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw"
             />
             <img
-              src="/images/hero-1200.jpg"
+              src="/images/hero-600.webp"
               alt="Christmas decorations with gifts and ornaments"
               className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
               loading="eager"
               decoding="async"
-              width="1200"
-              height="800"
+              width="600"
+              height="400"
+              fetchPriority="high"
             />
           </picture>
         </div>
