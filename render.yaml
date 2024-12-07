@@ -1,11 +1,14 @@
+# Exported from Render on 2024-12-07T23:39:33Z
 services:
-  # Frontend static site
   - type: web
-    name: secret-santa-frontend
-    env: static
-    buildCommand: cd frontend && pnpm install && pnpm run build
-    staticPublishPath: frontend/build
-    pullRequestPreviewsEnabled: true
+    name: Frontend
+    runtime: static
+    repo: https://github.com/larsniet/secret_santa
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false
+    buildCommand: npm run build
+    staticPublishPath: build
     headers:
       - path: /*
         name: Cache-Control
@@ -14,31 +17,36 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://elves.plansecretsanta.com/api
-
-  # Backend API service
+    domains:
+      - www.plansecretsanta.com
+      - plansecretsanta.com
+    rootDir: frontend
   - type: web
-    name: secret-santa-backend
-    env: node
+    name: Backend
+    runtime: node
+    repo: https://github.com/larsniet/secret_santa
     plan: free
-    buildCommand: cd backend && pnpm install && pnpm run build
-    startCommand: cd backend && pnpm run start:prod
     envVars:
       - key: PORT
-        value: 5001
-      - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: SMTP_HOST
-        sync: false
       - key: SMTP_PORT
         sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
+      - key: MONGODB_URI
         sync: false
       - key: SMTP_FROM
         sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+    region: oregon
+    buildCommand: pnpm i && pnpm build
+    startCommand: pnpm start:prod
+    domains:
+      - elves.plansecretsanta.com
+    rootDir: backend
+version: "1"
