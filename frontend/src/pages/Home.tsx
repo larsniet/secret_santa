@@ -58,11 +58,35 @@ export const Home: React.FC = () => {
           </div>
         </div>
         <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <img
-            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-            src="https://images.unsplash.com/photo-1543589077-47d81606c1bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=2850&q=80"
-            alt="Christmas decorations"
-          />
+          <picture>
+            <source
+              type="image/webp"
+              srcSet="
+                /images/hero-600.webp 600w,
+                /images/hero-1200.webp 1200w,
+                /images/hero-1800.webp 1800w
+              "
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            <source
+              type="image/jpeg"
+              srcSet="
+                /images/hero-600.jpg 600w,
+                /images/hero-1200.jpg 1200w,
+                /images/hero-1800.jpg 1800w
+              "
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            <img
+              src="/images/hero-1200.jpg"
+              alt="Christmas decorations with gifts and ornaments"
+              className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
+              loading="eager"
+              decoding="async"
+              width="1200"
+              height="800"
+            />
+          </picture>
         </div>
       </div>
 
@@ -79,7 +103,7 @@ export const Home: React.FC = () => {
           </div>
 
           <div className="mt-10">
-            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+            <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
               <div className="relative">
                 <dt>
                   <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-[#B91C1C] text-white">
@@ -187,7 +211,7 @@ export const Home: React.FC = () => {
                   system.
                 </dd>
               </div>
-            </div>
+            </dl>
           </div>
         </div>
       </div>
