@@ -8,7 +8,9 @@ export const Testimonials: React.FC = () => {
       content:
         "This platform made organizing our office Secret Santa so much easier! Everyone loved how smooth the process was.",
       image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=facearea&facepad=2&w=48&h=48&q=75",
+      imageLarge:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=facearea&facepad=2&w=96&h=96&q=75",
     },
     {
       name: "Michael Chen",
@@ -16,7 +18,9 @@ export const Testimonials: React.FC = () => {
       content:
         "Perfect for our large family gift exchange. The automatic matching saved us so much time, and everyone got their assignments instantly.",
       image:
-        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?auto=format&fit=facearea&facepad=2&w=48&h=48&q=75",
+      imageLarge:
+        "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?auto=format&fit=facearea&facepad=2&w=96&h=96&q=75",
     },
     {
       name: "Emma Wilson",
@@ -24,7 +28,9 @@ export const Testimonials: React.FC = () => {
       content:
         "I've used this for multiple events, and it never disappoints. The interface is intuitive, and the support is excellent.",
       image:
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=facearea&facepad=2&w=48&h=48&q=75",
+      imageLarge:
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=facearea&facepad=2&w=96&h=96&q=75",
     },
   ];
 
@@ -49,11 +55,21 @@ export const Testimonials: React.FC = () => {
               className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 transform transition duration-200 hover:-translate-y-1"
             >
               <div className="flex items-center mb-6">
-                <img
-                  className="h-12 w-12 rounded-full"
-                  src={testimonial.image}
-                  alt={testimonial.name}
-                />
+                <picture>
+                  <source
+                    srcSet={testimonial.imageLarge}
+                    media="(min-width: 640px)"
+                  />
+                  <img
+                    className="h-12 w-12 rounded-full"
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    loading="lazy"
+                    decoding="async"
+                    width="48"
+                    height="48"
+                  />
+                </picture>
                 <div className="ml-4">
                   <h3 className="text-lg font-medium text-gray-900">
                     {testimonial.name}
