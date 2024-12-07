@@ -1,4 +1,33 @@
-# Secret Santa App Deployment Guide
+# Secret Santa App
+
+A modern web application for organizing Secret Santa gift exchanges with your friends, family, or colleagues. Built with React, TypeScript, Node.js, and MongoDB.
+
+## Features
+
+- 🎁 Create and manage Secret Santa sessions
+- 👥 Invite participants via email
+- 🎯 Set gift preferences and wishlists
+- 🎲 Automatic random assignment of gift pairs
+- 🔒 Secure authentication system
+- 📱 Responsive design for all devices
+
+## Tech Stack
+
+### Frontend
+
+- React 18
+- TypeScript
+- React Router v6
+- Tailwind CSS
+- Axios for API calls
+- Jest & React Testing Library
+
+### Backend
+
+- Node.js with Express
+- MongoDB with Mongoose
+- JWT Authentication
+- Email service integration
 
 ## Project Structure
 
@@ -9,72 +38,103 @@ secret_santa/
 └── README.md       # This file
 ```
 
-## Deployment Steps
+## Getting Started
 
-### 1. Backend Deployment (Render.com)
+### Prerequisites
 
-1. Go to [Render.com](https://render.com) and create an account
-2. Click "New +" and select "Web Service"
-3. Connect your GitHub repository
-4. Configure the Web Service:
-   - Name: `secret-santa-backend`
-   - Environment: `Node`
-   - Build Command: `npm install`
-   - Start Command: `node server.js`
-   - Root Directory: `backend`
-5. Add Environment Variables:
+- Node.js (v16 or higher)
+- pnpm (recommended) or npm
+- MongoDB instance
+- SMTP server for emails
+
+### Local Development
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd secret_santa
    ```
-   MONGODB_URI=your_mongodb_connection_string
-   PORT=5001
-   SMTP_HOST=smtp.hostinger.com
-   SMTP_PORT=465
-   SMTP_USER=your_email
-   SMTP_PASS=your_password
-   SMTP_FROM="Father Christmas <your_email>"
+
+2. **Backend Setup**
+
+   ```bash
+   cd backend
+   pnpm install
+
+   # Create .env file:
+   touch .env
+   echo "MONGODB_URI=your_mongodb_connection_string" >> .env
+   echo "PORT=5001" >> .env
+   echo "SMTP_HOST=smtp.provider.com" >> .env
+   echo "SMTP_PORT=465" >> .env
+   echo "SMTP_USER=your_email" >> .env
+   echo "SMTP_PASS=your_password" >> .env
+   echo "SMTP_FROM=\"Father Christmas <your_email>\"" >> .env
+
+   # Start development server
+   pnpm run dev
    ```
-6. Click "Create Web Service"
 
-### 2. Frontend Deployment (Render.com)
+3. **Frontend Setup**
 
-1. In Render.com, click "New +" and select "Static Site"
-2. Connect your GitHub repository
-3. Configure the Static Site:
-   - Name: `secret-santa-frontend`
-   - Build Command: `npm install && npm run build`
-   - Publish Directory: `build`
-   - Root Directory: `frontend`
-4. Add Environment Variables:
+   ```bash
+   cd frontend
+   pnpm install
+
+   # Create .env.local file:
+   touch .env.local
+   echo "REACT_APP_API_URL=http://localhost:5001/api" >> .env.local
+
+   # Start development server
+   pnpm run dev
    ```
-   REACT_APP_API_URL=https://your-backend-url.onrender.com/api
-   REACT_APP_ADMIN_PASSWORD=your_admin_password
-   ```
-5. Click "Create Static Site"
 
-### 3. Update Frontend API URL
+## Testing
 
-After both services are deployed:
-
-1. Get your backend URL from Render.com
-2. Update the `REACT_APP_API_URL` in the frontend's environment variables on Render.com
-3. Trigger a new deployment of the frontend
-
-## Local Development
-
-### Backend
-
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-### Frontend
+### Frontend Tests
 
 ```bash
 cd frontend
-npm install
-npm start
+pnpm test
 ```
+
+The frontend includes comprehensive tests for:
+
+- Authentication flows
+- Session management
+- Participant interactions
+- UI components
+
+### Backend Tests
+
+```bash
+cd backend
+pnpm test
+```
+
+## Deployment
+
+### Backend Deployment (Render.com)
+
+1. Create a new Web Service on Render
+2. Configure build settings:
+   - Build Command: `pnpm install`
+   - Start Command: `node server.js`
+   - Root Directory: `backend`
+3. Add environment variables as listed in the Backend Setup section
+
+### Frontend Deployment (Render.com)
+
+1. Create a new Static Site on Render
+2. Configure build settings:
+   - Build Command: `pnpm install && pnpm run build`
+   - Publish Directory: `build`
+   - Root Directory: `frontend`
+3. Add environment variables:
+   ```
+   REACT_APP_API_URL=https://your-backend-url.onrender.com/api
+   ```
 
 ## Environment Variables
 
@@ -90,16 +150,35 @@ SMTP_PASS=your_password
 SMTP_FROM="Father Christmas <your_email>"
 ```
 
-### Frontend (.env.production)
+### Frontend
+
+Development (.env.local):
+
+```
+REACT_APP_API_URL=http://localhost:5001/api
+```
+
+Production (.env.production.local):
 
 ```
 REACT_APP_API_URL=https://your-backend-url.onrender.com/api
-REACT_APP_ADMIN_PASSWORD=your_admin_password
 ```
 
-## Important Notes
+## Contributing
 
-1. Make sure to update the CORS settings in the backend if needed
-2. Keep your admin password secure
-3. Never commit sensitive environment variables to Git
-4. MongoDB connection string should be from your MongoDB Atlas cluster
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## Security Notes
+
+- Never commit sensitive environment variables
+- Keep your MongoDB connection string secure
+- Use HTTPS in production
+- Regularly update dependencies
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
