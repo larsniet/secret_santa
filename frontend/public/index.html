@@ -4,6 +4,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#B91C1C" />
+
+    <!-- Preconnect to critical origins -->
+    <link rel="preconnect" href="https://plansecretsanta.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload critical hero image -->
+    <link
+      rel="preload"
+      as="image"
+      href="%PUBLIC_URL%/images/hero-400.webp"
+      type="image/webp"
+      media="(max-width: 640px)"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="%PUBLIC_URL%/images/hero-600.webp"
+      type="image/webp"
+      media="(min-width: 641px)"
+    />
+
     <meta
       name="description"
       content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
@@ -136,6 +157,16 @@
     />
 
     <title>Secret Santa - Gift Exchange Made Easy</title>
+
+    <!-- Inline critical styles -->
+    <style>
+      .hero-placeholder {
+        background-color: #f9fafb;
+        background-image: url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4QBKRXhpZgAASUkqAAgAAAACAA4BAgASAAAAJgAAAJiCAgAKAAAAOAAAAAAAAABDaHJpc3RtYXMgZGVjb3JhdGlvbnMgd2l0aCBnaWZ0cyBhbmQgb3JuYW1lbnRzAP/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB/8AAEQgACAAMAwERAAIRAQMRAf/EAaIAAAAGAgMBAAAAAAAAAAAAAAcIBgUECQMKAgEACwEAAAYDAQEBAAAAAAAAAAAABgUEAwcIAgEJAAsQAAIBAwQBAwMCAwMDAgYJdQECAwQRBRIGIQcTIgAIMRRBMiMVCVFCFmEkMxdSI4FFJDQYK8JyggkKFhcYGRolJicoKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+gEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoLEQACAQIEBAMEBwUEBAABAncAAQIDEQQFEiExBhNBUWFxIgMygZEHFKGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A9U0srcinYlVUlmZjZVVQWZmJ0AABJ8AD+PfuvdM1Vk8bQh/uKmGFo1LtG8qK4QfqYKxJUfn37r3RAO3PkD1L0/X1NDnuwsHQ5WgLmXD0eRx9VmjYkWqKWhnWaWBv9TqgVD/X37r3XHo/5H9NfIDJV+F6v7CxOezOLppK6qx8FPkqWrkooZEikmhgrYYJpYw8iLqQEXYe/de6//Z");
+        background-size: cover;
+        background-position: center;
+      }
+    </style>
   </head>
   <body>
     <noscript>
