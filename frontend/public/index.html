@@ -3,12 +3,76 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#FFF" />
+    <meta name="theme-color" content="#B91C1C" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
+    />
+    <meta
+      name="keywords"
+      content="Secret Santa, gift exchange, Christmas, holiday, gift giving, wishlist"
+    />
+    <meta name="author" content="Lars van der Niet" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="%PUBLIC_URL%" />
+    <meta property="og:site_name" content="Plan Secret Santa" />
+    <meta
+      property="og:title"
+      content="Secret Santa - Gift Exchange Made Easy"
+    />
+    <meta
+      property="og:description"
+      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
     />
 
+    <!-- Primary Open Graph Image -->
+    <meta property="og:image" content="%PUBLIC_URL%/1200x630.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Secret Santa - Gift Exchange Made Easy"
+    />
+
+    <!-- Medium Open Graph Image -->
+    <meta property="og:image" content="%PUBLIC_URL%/600x314.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="314" />
+    <meta
+      property="og:image:alt"
+      content="Secret Santa - Gift Exchange Made Easy"
+    />
+
+    <!-- Small Open Graph Image -->
+    <meta property="og:image" content="%PUBLIC_URL%/400x400.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="400" />
+    <meta property="og:image:height" content="400" />
+    <meta
+      property="og:image:alt"
+      content="Secret Santa - Gift Exchange Made Easy"
+    />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@plansecretsanta" />
+    <meta name="twitter:creator" content="@larsvdniet" />
+    <meta name="twitter:url" content="%PUBLIC_URL%" />
+    <meta
+      name="twitter:title"
+      content="Secret Santa - Gift Exchange Made Easy"
+    />
+    <meta
+      name="twitter:description"
+      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
+    />
+    <meta name="twitter:image" content="%PUBLIC_URL%/400x400.png" />
+
+    <!-- Favicons -->
     <link
       rel="icon"
       type="image/png"
@@ -22,37 +86,44 @@
       sizes="180x180"
       href="%PUBLIC_URL%/apple-touch-icon.png"
     />
+
+    <!-- PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Secret Santa" />
-    <link rel="manifest" href="%PUBLIC_URL%/site.webmanifest" />
-
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>Secret Santa - Gift Exchange Made Easy</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div
+        style="
+          padding: 20px;
+          text-align: center;
+          font-family: system-ui, -apple-system, sans-serif;
+        "
+      >
+        <img
+          src="%PUBLIC_URL%/logo.svg"
+          alt="Secret Santa Logo"
+          style="width: 64px; height: 64px; margin-bottom: 16px"
+        />
+        <h1 style="color: #b91c1c; margin: 0 0 8px 0">JavaScript Required</h1>
+        <p style="color: #4b5563; margin: 0">
+          Please enable JavaScript to use Secret Santa. We promise it's worth
+          it! 🎁
+        </p>
+      </div>
+    </noscript>
     <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
   </body>
 </html>

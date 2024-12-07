@@ -63,14 +63,15 @@ secret_santa/
    pnpm install
 
    # Create .env file with:
-   MONGODB_URI=your_mongodb_connection_string
-   PORT=5001
-   SMTP_HOST=smtp.hostinger.com
-   SMTP_PORT=465
-   SMTP_USER=your_email
-   SMTP_PASS=your_password
-   SMTP_FROM="Father Christmas <your_email>"
-   JWT_SECRET=your_jwt_secret_key
+   touch .env
+   echo "MONGODB_URI=your_mongodb_connection_string" >> .env
+   echo "PORT=5001" >> .env
+   echo "SMTP_HOST=smtp.hostinger.com" >> .env
+   echo "SMTP_PORT=465" >> .env
+   echo "SMTP_USER=your_email" >> .env
+   echo "SMTP_PASS=your_password" >> .env
+   echo "SMTP_FROM=\"Father Christmas <your_email>\"" >> .env
+   echo "JWT_SECRET=your_jwt_secret_key" >> .env
 
    # Start development server
    pnpm run dev
