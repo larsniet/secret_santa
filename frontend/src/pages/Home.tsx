@@ -6,12 +6,19 @@ import { Testimonials } from "../components/home/Testimonials";
 import { Pricing } from "../components/home/Pricing";
 import { FAQ } from "../components/home/FAQ";
 
-// Preload the hero image
+// Preload the hero image based on viewport
 const preloadHeroImage = () => {
   const link = document.createElement("link");
   link.rel = "preload";
   link.as = "image";
-  link.href = "/images/hero-600.webp";
+
+  // Use smaller image for mobile
+  if (window.innerWidth < 640) {
+    link.href = "/images/hero-400.webp";
+  } else {
+    link.href = "/images/hero-600.webp";
+  }
+
   link.type = "image/webp";
   document.head.appendChild(link);
 };
@@ -76,23 +83,24 @@ export const Home: React.FC = () => {
           <picture>
             <source
               type="image/webp"
-              srcSet="/images/hero-600.webp 600w, /images/hero-1200.webp 1200w"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw"
+              srcSet="/images/hero-400.webp 400w, /images/hero-600.webp 600w, /images/hero-1200.webp 1200w"
+              sizes="(max-width: 640px) 400px, (max-width: 768px) 600px, (max-width: 1200px) 50vw"
             />
             <source
               type="image/jpeg"
-              srcSet="/images/hero-600.jpg 600w, /images/hero-1200.jpg 1200w"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw"
+              srcSet="/images/hero-400.jpg 400w, /images/hero-600.jpg 600w, /images/hero-1200.jpg 1200w"
+              sizes="(max-width: 640px) 400px, (max-width: 768px) 600px, (max-width: 1200px) 50vw"
             />
             <img
-              src="/images/hero-600.webp"
+              src="/images/hero-400.webp"
               alt="Christmas decorations with gifts and ornaments"
               className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
               loading="eager"
               decoding="async"
-              width="600"
-              height="400"
+              width="400"
+              height="267"
               fetchPriority="high"
+              style={{ backgroundColor: "#F9FAFB" }}
             />
           </picture>
         </div>
