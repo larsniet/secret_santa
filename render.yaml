@@ -5,7 +5,6 @@ services:
     env: static
     buildCommand: cd frontend && pnpm install && pnpm run build
     staticPublishPath: frontend/build
-    plan: free
     pullRequestPreviewsEnabled: true
     headers:
       - path: /*
@@ -20,7 +19,7 @@ services:
   - type: web
     name: secret-santa-backend
     env: node
-    plan: free
+    plan: starter
     buildCommand: cd backend && pnpm install && pnpm run build
     startCommand: cd backend && pnpm run start:prod
     envVars:
