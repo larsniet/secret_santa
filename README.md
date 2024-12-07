@@ -1,6 +1,6 @@
 # Secret Santa App
 
-A modern web application for organizing Secret Santa gift exchanges with your friends, family, or colleagues. Built with React, TypeScript, Node.js, and MongoDB.
+A modern web application for organizing Secret Santa gift exchanges with your friends, family, or colleagues. Built with React, TypeScript, NestJS, and MongoDB.
 
 ## Features
 
@@ -20,22 +20,22 @@ A modern web application for organizing Secret Santa gift exchanges with your fr
 - React Router v6
 - Tailwind CSS
 - Axios for API calls
-- Jest & React Testing Library
 
 ### Backend
 
-- Node.js with Express
+- NestJS 10
+- TypeScript
 - MongoDB with Mongoose
-- JWT Authentication
-- Email service integration
+- Passport.js & JWT Authentication
+- Nodemailer for email service
 
 ## Project Structure
 
 ```
 secret_santa/
-├── backend/         # Express.js backend
-├── frontend/        # React frontend
-└── README.md       # This file
+├── backend/            # NestJS backend
+├── frontend/           # React frontend
+└── README.md           # This file
 ```
 
 ## Getting Started
@@ -52,7 +52,7 @@ secret_santa/
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
+   git clone git@github.com:larsniet/secret_santa.git
    cd secret_santa
    ```
 
@@ -62,15 +62,15 @@ secret_santa/
    cd backend
    pnpm install
 
-   # Create .env file:
-   touch .env
-   echo "MONGODB_URI=your_mongodb_connection_string" >> .env
-   echo "PORT=5001" >> .env
-   echo "SMTP_HOST=smtp.provider.com" >> .env
-   echo "SMTP_PORT=465" >> .env
-   echo "SMTP_USER=your_email" >> .env
-   echo "SMTP_PASS=your_password" >> .env
-   echo "SMTP_FROM=\"Father Christmas <your_email>\"" >> .env
+   # Create .env file with:
+   MONGODB_URI=your_mongodb_connection_string
+   PORT=5001
+   SMTP_HOST=smtp.hostinger.com
+   SMTP_PORT=465
+   SMTP_USER=your_email
+   SMTP_PASS=your_password
+   SMTP_FROM="Father Christmas <your_email>"
+   JWT_SECRET=your_jwt_secret_key
 
    # Start development server
    pnpm run dev
@@ -90,37 +90,14 @@ secret_santa/
    pnpm run dev
    ```
 
-## Testing
-
-### Frontend Tests
-
-```bash
-cd frontend
-pnpm test
-```
-
-The frontend includes comprehensive tests for:
-
-- Authentication flows
-- Session management
-- Participant interactions
-- UI components
-
-### Backend Tests
-
-```bash
-cd backend
-pnpm test
-```
-
 ## Deployment
 
 ### Backend Deployment (Render.com)
 
 1. Create a new Web Service on Render
 2. Configure build settings:
-   - Build Command: `pnpm install`
-   - Start Command: `node server.js`
+   - Build Command: `pnpm install && pnpm run build`
+   - Start Command: `pnpm run start:prod`
    - Root Directory: `backend`
 3. Add environment variables as listed in the Backend Setup section
 
@@ -148,6 +125,7 @@ SMTP_PORT=465
 SMTP_USER=your_email
 SMTP_PASS=your_password
 SMTP_FROM="Father Christmas <your_email>"
+JWT_SECRET=your_jwt_secret_key
 ```
 
 ### Frontend
@@ -178,6 +156,7 @@ REACT_APP_API_URL=https://your-backend-url.onrender.com/api
 - Keep your MongoDB connection string secure
 - Use HTTPS in production
 - Regularly update dependencies
+- Protect your JWT secret key
 
 ## License
 
