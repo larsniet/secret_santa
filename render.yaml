@@ -1,9 +1,7 @@
 services:
   # Frontend static site
-  - type: web
+  - type: static
     name: secret-santa-frontend
-    env: static
-    plan: free
     buildCommand: cd frontend && pnpm install && pnpm run build
     staticPublishPath: frontend/build
     pullRequestPreviewsEnabled: true
