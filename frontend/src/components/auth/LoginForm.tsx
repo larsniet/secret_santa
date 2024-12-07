@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Button } from "../common/Button";
 
@@ -31,6 +31,21 @@ export const LoginForm: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
+        <Link to="/" className="block text-center mb-8">
+          <div className="inline-flex items-center justify-center">
+            <span className="mr-2 text-2xl font-bold text-[#B91C1C]">
+              Secret
+            </span>
+            <img
+              src="/logo.svg"
+              alt="Secret Santa Logo"
+              className="w-12 h-12"
+            />
+            <span className="ml-2 text-2xl font-bold text-[#B91C1C]">
+              Santa
+            </span>
+          </div>
+        </Link>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Welcome Back!</h1>
           <p className="mt-2 text-sm text-gray-600">

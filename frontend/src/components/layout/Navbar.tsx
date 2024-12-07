@@ -13,6 +13,11 @@ export const Navbar: React.FC = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link to="/" className="flex-shrink-0 flex items-center">
+              <img
+                src="/logo.svg"
+                alt="Secret Santa Logo"
+                className="w-12 h-12"
+              />
               <span className="text-xl font-bold text-[#B91C1C]">
                 Secret Santa
               </span>
