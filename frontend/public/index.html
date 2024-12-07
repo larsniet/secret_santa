@@ -16,7 +16,7 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="%PUBLIC_URL%" />
+    <meta property="og:url" content="https://plansecretsanta.com" />
     <meta property="og:site_name" content="Plan Secret Santa" />
     <meta
       property="og:title"
@@ -28,7 +28,10 @@
     />
 
     <!-- Primary Open Graph Image -->
-    <meta property="og:image" content="%PUBLIC_URL%/1200x630.png" />
+    <meta
+      property="og:image"
+      content="https://plansecretsanta.com/1200x630.png"
+    />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -38,7 +41,10 @@
     />
 
     <!-- Medium Open Graph Image -->
-    <meta property="og:image" content="%PUBLIC_URL%/600x314.png" />
+    <meta
+      property="og:image"
+      content="https://plansecretsanta.com/600x314.png"
+    />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="600" />
     <meta property="og:image:height" content="314" />
@@ -48,7 +54,10 @@
     />
 
     <!-- Small Open Graph Image -->
-    <meta property="og:image" content="%PUBLIC_URL%/400x400.png" />
+    <meta
+      property="og:image"
+      content="https://plansecretsanta.com/400x400.png"
+    />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="400" />
     <meta property="og:image:height" content="400" />
@@ -60,8 +69,8 @@
     <!-- Twitter -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="@plansecretsanta" />
-    <meta name="twitter:creator" content="@larsvdniet" />
-    <meta name="twitter:url" content="%PUBLIC_URL%" />
+    <meta name="twitter:creator" content="@larsniet" />
+    <meta name="twitter:url" content="https://plansecretsanta.com" />
     <meta
       name="twitter:title"
       content="Secret Santa - Gift Exchange Made Easy"
@@ -70,7 +79,10 @@
       name="twitter:description"
       content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
     />
-    <meta name="twitter:image" content="%PUBLIC_URL%/400x400.png" />
+    <meta
+      name="twitter:image"
+      content="https://plansecretsanta.com/400x400.png"
+    />
 
     <!-- Favicons -->
     <link
@@ -93,12 +105,34 @@
     <meta name="apple-mobile-web-app-title" content="Secret Santa" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Preload Critical Fonts -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      href="%PUBLIC_URL%/fonts/inter-regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="%PUBLIC_URL%/fonts/inter-medium.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="%PUBLIC_URL%/fonts/inter-semibold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="%PUBLIC_URL%/fonts/inter-bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
     />
 
     <title>Secret Santa - Gift Exchange Made Easy</title>
