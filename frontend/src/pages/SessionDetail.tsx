@@ -200,9 +200,12 @@ export const SessionDetail: React.FC = () => {
 
   if (isLoading || !session) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
+      <Layout isLoading>
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"
+          role="status"
+        >
+          <span className="sr-only">Loading...</span>
         </div>
       </Layout>
     );
@@ -210,7 +213,7 @@ export const SessionDetail: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>

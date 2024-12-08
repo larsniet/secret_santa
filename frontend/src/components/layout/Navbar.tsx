@@ -91,13 +91,13 @@ export const Navbar: React.FC = () => {
       {/* Mobile menu */}
       {isMobileMenuOpen && (
         <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
+          <div className="px-4 pt-2 pb-3 space-y-2">
             {user ? (
-              <>
+              <div className="flex flex-col items-center space-y-2">
                 <Button
                   variant="link"
                   to="/dashboard"
-                  fullWidth
+                  className="w-auto px-8"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Dashboard
@@ -108,29 +108,29 @@ export const Navbar: React.FC = () => {
                     logout();
                     setIsMobileMenuOpen(false);
                   }}
-                  fullWidth
+                  className="w-auto px-8"
                 >
                   Logout
                 </Button>
-              </>
+              </div>
             ) : (
-              <>
+              <div className="flex flex-col items-center space-y-2">
                 <Button
                   variant="link"
                   to="/login"
-                  fullWidth
+                  className="w-auto px-8"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Login
                 </Button>
                 <Button
                   to="/register"
-                  fullWidth
+                  className="w-auto px-8"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Register
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>

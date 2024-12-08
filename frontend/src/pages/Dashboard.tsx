@@ -63,9 +63,12 @@ export const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
+      <Layout isLoading>
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"
+          role="status"
+        >
+          <span className="sr-only">Loading...</span>
         </div>
       </Layout>
     );
@@ -73,7 +76,7 @@ export const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Create New Session
