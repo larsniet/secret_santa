@@ -9,6 +9,15 @@ export const api = axios.create({
 let requestInterceptor: number | null = null;
 let responseInterceptor: number | null = null;
 
+// Public endpoints that don't require authentication
+const publicEndpoints = [
+  "/auth/login",
+  "/auth/register",
+  "/sessions/join",
+  "/sessions/:sessionId/participants/:participantId",
+  "/sessions/:sessionId/participants/:participantId/preferences",
+];
+
 export const setupAxiosInterceptors = (getToken: () => string | null) => {
   // Remove existing interceptors
   if (requestInterceptor !== null) {
@@ -22,7 +31,14 @@ export const setupAxiosInterceptors = (getToken: () => string | null) => {
   requestInterceptor = api.interceptors.request.use(
     (config) => {
       const token = getToken();
-      if (token) {
+      const isPublicEndpoint = publicEndpoints.some((endpoint) => {
+        // Convert endpoint pattern to regex to handle dynamic segments
+        const pattern = endpoint.replace(/:[^/]+/g, "[^/]+");
+        const regex = new RegExp(`^${pattern}`);
+        return regex.test(config.url || "");
+      });
+
+      if (token && !isPublicEndpoint) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
@@ -36,7 +52,10 @@ export const setupAxiosInterceptors = (getToken: () => string | null) => {
   responseInterceptor = api.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response?.status === 401) {
+      if (
+        error.response?.status === 401 &&
+        !error.config.url?.includes("/participants/")
+      ) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         window.location.href = "/login";

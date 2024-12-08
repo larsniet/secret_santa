@@ -68,6 +68,16 @@ class ParticipantService {
     );
     return response.data;
   }
+
+  async getParticipantPreferences(
+    sessionId: string,
+    participantId: string
+  ): Promise<Participant> {
+    const response = await api.get<Participant>(
+      `/sessions/${sessionId}/participants/${participantId}`
+    );
+    return response.data;
+  }
 }
 
 export const participantService = new ParticipantService();

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
-import { sessionService } from "../services/session.service";
 import { participantService } from "../services/participant.service";
 
 export const ParticipantPreferences: React.FC = () => {
@@ -21,17 +20,15 @@ export const ParticipantPreferences: React.FC = () => {
   });
 
   useEffect(() => {
-    const loadSessionAndPreferences = async () => {
+    const loadPreferences = async () => {
       if (!sessionId || !participantId) return;
 
       try {
         setIsLoading(true);
-        await sessionService.getSession(sessionId);
-
-        const participants = await participantService.getParticipants(
-          sessionId
+        const participant = await participantService.getParticipantPreferences(
+          sessionId,
+          participantId
         );
-        const participant = participants.find((p) => p._id === participantId);
 
         if (participant?.preferences) {
           setPreferences({
@@ -42,13 +39,13 @@ export const ParticipantPreferences: React.FC = () => {
           });
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || "Failed to load session");
+        setError(err.response?.data?.message || "Failed to load preferences");
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadSessionAndPreferences();
+    loadPreferences();
   }, [sessionId, participantId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,7 +60,7 @@ export const ParticipantPreferences: React.FC = () => {
       );
       setSuccess(true);
       setTimeout(() => {
-        navigate(`/session/${sessionId}`);
+        window.location.href = `/join/${sessionId}`;
       }, 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to update preferences");
@@ -72,10 +69,8 @@ export const ParticipantPreferences: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
-        </div>
+      <Layout isLoading={true}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
       </Layout>
     );
   }
@@ -117,7 +112,24 @@ export const ParticipantPreferences: React.FC = () => {
       <Layout>
         <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Oops!</h2>
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <svg
+                className="h-6 w-6 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Unable to Load Preferences
+            </h2>
             <p className="text-gray-600">{error}</p>
           </div>
         </div>

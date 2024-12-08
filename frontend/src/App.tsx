@@ -19,6 +19,7 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/register" element={<RegisterForm />} />
@@ -27,6 +28,8 @@ function App() {
             path="/session/:sessionId/participant/:participantId/preferences"
             element={<ParticipantPreferences />}
           />
+
+          {/* Protected routes */}
           <Route
             path="/dashboard"
             element={
@@ -36,13 +39,15 @@ function App() {
             }
           />
           <Route
-            path="/sessions/:id"
+            path="/sessions/:id/*"
             element={
               <ProtectedRoute>
                 <SessionDetail />
               </ProtectedRoute>
             }
           />
+
+          {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

@@ -55,7 +55,7 @@ export const JoinSession: React.FC = () => {
       // Redirect to preferences page
       setTimeout(() => {
         navigate(
-          `/session/${session._id}/participant/${participant._id}/preferences`
+          `/sessions/${session._id}/participant/${participant._id}/preferences`
         );
       }, 2000);
     } catch (err: any) {
