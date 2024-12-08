@@ -14,6 +14,24 @@ export class ParticipantsService {
     return this.participantModel.find({ session: sessionId }).exec();
   }
 
+  async findParticipant(
+    sessionId: string,
+    participantId: string,
+  ): Promise<Participant> {
+    const participant = await this.participantModel
+      .findOne({
+        _id: participantId,
+        session: sessionId,
+      })
+      .exec();
+
+    if (!participant) {
+      throw new NotFoundException('Participant not found');
+    }
+
+    return participant;
+  }
+
   async create(participantData: {
     name: string;
     email: string;

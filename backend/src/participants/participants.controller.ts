@@ -65,4 +65,12 @@ export class ParticipantsController {
       preferences,
     );
   }
+
+  @Get(':participantId')
+  async getParticipant(
+    @Param('sessionId') sessionId: string,
+    @Param('participantId') participantId: string,
+  ): Promise<Participant> {
+    return this.participantsService.findParticipant(sessionId, participantId);
+  }
 }

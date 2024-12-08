@@ -3,7 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Layout } from "../components/layout/Layout";
 import { Link } from "react-router-dom";
 import { Testimonials } from "../components/home/Testimonials";
-import { Pricing } from "../components/home/Pricing";
+import { HowItWorks } from "../components/home/HowItWorks";
 import { FAQ } from "../components/home/FAQ";
 
 export const Home: React.FC = () => {
@@ -212,8 +212,8 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Additional Sections */}
+      <HowItWorks />
       <Testimonials />
-      <Pricing />
       <FAQ />
 
       {/* Final CTA Section */}
