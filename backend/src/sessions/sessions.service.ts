@@ -80,4 +80,13 @@ export class SessionsService {
     }
     await session.deleteOne();
   }
+
+  async getActiveSessionCount(userId: string): Promise<number> {
+    return this.sessionModel
+      .countDocuments({
+        creator: userId,
+        status: SessionStatus.ACTIVE,
+      })
+      .exec();
+  }
 }

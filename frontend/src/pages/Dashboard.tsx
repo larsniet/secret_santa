@@ -76,7 +76,9 @@ export const Dashboard: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="space-y-8">
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Create New Session

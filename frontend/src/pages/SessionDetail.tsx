@@ -213,67 +213,58 @@ export const SessionDetail: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {session.name}
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Created on {new Date(session.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  session.status === "active"
-                    ? "bg-green-100 text-green-800"
-                    : session.status === "completed"
-                    ? "bg-[#FEE2E2] text-[#B91C1C]"
-                    : "bg-gray-100 text-gray-800"
-                }`}
-              >
-                {session.status}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">
-              Invite Participants
-            </h2>
-            <p className="text-sm text-gray-600 mb-3">
-              Share this link with participants to join your Secret Santa
-              session:
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">{session.name}</h1>
+            <p className="mt-1 text-sm text-gray-500">
+              Created on {new Date(session.createdAt).toLocaleDateString()}
             </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                value={`${window.location.origin}/join/${session.inviteCode}`}
-                readOnly
-                className="flex-1 p-2 bg-white border border-gray-300 rounded-md text-sm text-gray-600"
-              />
-              <Button variant="secondary" onClick={copyInviteLink} size="md">
-                {inviteCopied ? "Copied!" : "Copy Link"}
-              </Button>
-            </div>
+          </div>
+          <div>
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                session.status === "active"
+                  ? "bg-green-100 text-green-800"
+                  : session.status === "completed"
+                  ? "bg-[#FEE2E2] text-[#B91C1C]"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {session.status}
+            </span>
           </div>
         </div>
 
         {(error || successMessage) && (
           <div
-            className={`mt-4 rounded-md ${
-              error ? "bg-red-50" : "bg-green-50"
-            } p-4`}
+            className={`p-4 ${
+              error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
+            } rounded-md`}
           >
-            <div
-              className={`text-sm ${error ? "text-red-700" : "text-green-700"}`}
-            >
-              {error || successMessage}
-            </div>
+            {error || successMessage}
           </div>
         )}
+
+        <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+          <h2 className="text-lg font-medium text-gray-900 mb-2">
+            Invite Participants
+          </h2>
+          <p className="text-sm text-gray-600 mb-3">
+            Share this link with participants to join your Secret Santa session:
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={`${window.location.origin}/join/${session.inviteCode}`}
+              readOnly
+              className="flex-1 p-2 bg-white border border-gray-300 rounded-md text-sm text-gray-600"
+            />
+            <Button variant="secondary" onClick={copyInviteLink} size="md">
+              {inviteCopied ? "Copied!" : "Copy Link"}
+            </Button>
+          </div>
+        </div>
 
         {session.status === "active" && (
           <div className="bg-white p-6 rounded-lg shadow">

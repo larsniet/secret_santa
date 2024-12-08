@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/user.schema';
+import { SubscriptionPlan } from '../users/user.schema';
 
 @Injectable()
 export class AuthService {
@@ -44,6 +45,8 @@ export class AuthService {
       email,
       password: hashedPassword,
       name,
+      subscriptionPlan: SubscriptionPlan.FREE,
+      subscriptionExpiresAt: null,
     });
 
     await user.save();

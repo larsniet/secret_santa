@@ -4,41 +4,46 @@ import { Link } from "react-router-dom";
 export const Pricing: React.FC = () => {
   const plans = [
     {
-      name: "Basic",
-      price: "Free",
+      name: "Free",
+      price: "€0",
       description: "Perfect for small groups",
       features: [
-        "Up to 10 participants",
+        "Up to 15 participants",
         "Basic matching algorithm",
         "Email notifications",
+        "Gift preferences & wishlists",
         "1 active event",
       ],
     },
     {
-      name: "Premium",
-      price: "$5",
-      description: "Great for larger groups",
+      name: "Group",
+      price: "€4",
+      description: "Great for larger groups & families",
       features: [
         "Up to 50 participants",
-        "Advanced matching preferences",
+        "Smart matching algorithm",
         "Custom event themes",
-        "5 active events",
-        "Priority support",
+        "Gift preferences & wishlists",
+        "Budget setting",
+        "3 active events",
       ],
       popular: true,
+      perEvent: true,
     },
     {
-      name: "Enterprise",
-      price: "$12",
-      description: "For organizations",
+      name: "Business",
+      price: "€10",
+      description: "For companies & organizations",
       features: [
         "Unlimited participants",
+        "Advanced matching algorithm",
         "Custom branding",
-        "API access",
-        "Unlimited events",
-        "24/7 support",
-        "Analytics dashboard",
+        "Gift preferences & wishlists",
+        "Budget management",
+        "10 active events",
+        "Priority support",
       ],
+      perEvent: true,
     },
   ];
 
@@ -50,10 +55,10 @@ export const Pricing: React.FC = () => {
             Pricing
           </h2>
           <p className="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Plans for Every Occasion
+            Simple, Event-Based Pricing
           </p>
           <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-            Choose the perfect plan for your Secret Santa event
+            Pay per event, no monthly fees or subscriptions
           </p>
         </div>
 
@@ -68,7 +73,7 @@ export const Pricing: React.FC = () => {
               {plan.popular && (
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4">
                   <span className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-[#B91C1C] text-white">
-                    Popular
+                    Most Popular
                   </span>
                 </div>
               )}
@@ -80,9 +85,9 @@ export const Pricing: React.FC = () => {
                   <span className="text-4xl font-extrabold text-gray-900">
                     {plan.price}
                   </span>
-                  {plan.price !== "Free" && (
+                  {plan.perEvent && (
                     <span className="ml-1 text-xl font-medium text-gray-500">
-                      /month
+                      /event
                     </span>
                   )}
                 </div>
@@ -120,6 +125,19 @@ export const Pricing: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <p className="text-base text-gray-500">
+            Need more events or custom features?{" "}
+            <Link
+              to="/contact"
+              className="text-[#B91C1C] font-medium hover:text-[#991B1B]"
+            >
+              Contact us
+            </Link>{" "}
+            for enterprise pricing.
+          </p>
         </div>
       </div>
     </div>

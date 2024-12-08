@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { participantService } from "../services/participant.service";
 
@@ -8,7 +8,6 @@ export const ParticipantPreferences: React.FC = () => {
     sessionId: string;
     participantId: string;
   }>();
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -69,8 +68,13 @@ export const ParticipantPreferences: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout isLoading={true}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
+      <Layout isLoading>
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"
+          role="status"
+        >
+          <span className="sr-only">Loading...</span>
+        </div>
       </Layout>
     );
   }
@@ -78,7 +82,7 @@ export const ParticipantPreferences: React.FC = () => {
   if (success) {
     return (
       <Layout>
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
           <div className="text-center">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
               <svg
@@ -110,7 +114,7 @@ export const ParticipantPreferences: React.FC = () => {
   if (error) {
     return (
       <Layout>
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
           <div className="text-center">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
               <svg
@@ -139,7 +143,7 @@ export const ParticipantPreferences: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto mt-10">
+      <div className="max-w-md mx-auto">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Gift Preferences

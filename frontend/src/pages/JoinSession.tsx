@@ -66,9 +66,12 @@ export const JoinSession: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"></div>
+      <Layout isLoading>
+        <div
+          className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"
+          role="status"
+        >
+          <span className="sr-only">Loading...</span>
         </div>
       </Layout>
     );
@@ -77,34 +80,32 @@ export const JoinSession: React.FC = () => {
   if (success) {
     return (
       <Layout>
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-          <div className="text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-              <svg
-                className="h-6 w-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Successfully Joined!
-            </h2>
-            <p className="text-gray-600 mb-4">
-              You have joined {session.name}. You will receive an email when the
-              Secret Santa assignments are made.
-            </p>
-            <p className="text-sm text-gray-500">
-              Redirecting to set your gift preferences...
-            </p>
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+            <svg
+              className="h-6 w-6 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
           </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Successfully Joined!
+          </h2>
+          <p className="text-gray-600 mb-4">
+            You have joined {session.name}. You will receive an email when the
+            Secret Santa assignments are made.
+          </p>
+          <p className="text-sm text-gray-500">
+            Redirecting to set your gift preferences...
+          </p>
         </div>
       </Layout>
     );
@@ -113,7 +114,7 @@ export const JoinSession: React.FC = () => {
   if (error) {
     return (
       <Layout>
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <div className="bg-white rounded-lg shadow-md p-6">
           <div className="text-center">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Oops!</h2>
             <p className="text-gray-600">{error}</p>
@@ -125,7 +126,7 @@ export const JoinSession: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto mt-10">
+      <div className="max-w-md mx-auto">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Join {session.name}
