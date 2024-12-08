@@ -17,7 +17,7 @@ export class Session {
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   creator: Types.ObjectId;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }] })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Participant' }] })
   participants: Types.ObjectId[];
 
   @Prop({ required: true, unique: true })

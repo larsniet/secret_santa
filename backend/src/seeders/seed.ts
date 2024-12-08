@@ -4,17 +4,17 @@ import { Model, Types } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, SubscriptionPlan } from '../users/user.schema';
-import { Session, SessionStatus } from '../sessions/session.schema';
 import { Participant } from '../participants/participant.schema';
+import { SessionsService } from '../sessions/sessions.service';
 
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
 
   const userModel = app.get<Model<User>>(getModelToken(User.name));
-  const sessionModel = app.get<Model<Session>>(getModelToken(Session.name));
   const participantModel = app.get<Model<Participant>>(
     getModelToken(Participant.name),
   );
+  const sessionsService = app.get(SessionsService);
 
   // Create user
   const hashedPassword = await bcrypt.hash('thisisnotapassword', 10);
@@ -28,17 +28,15 @@ async function seed() {
 
   const userId = user._id.toString();
 
-  // Create session
-  const session = await sessionModel.create({
-    name: 'Family Christmas 2023',
-    creator: new Types.ObjectId(userId),
-    status: SessionStatus.ACTIVE,
-    inviteCode: Math.random().toString(36).substring(2, 15),
-  });
+  // Create session using the service
+  const session = await sessionsService.createSession(
+    userId,
+    'Family Christmas 2023',
+  );
+  const sessionId = (session as any)._id.toString();
 
-  const sessionId = session._id.toString();
-
-  await participantModel.create({
+  // Create first participant (the creator)
+  const firstParticipant = await participantModel.create({
     name: user.name,
     email: user.email,
     session: new Types.ObjectId(sessionId),
@@ -46,22 +44,56 @@ async function seed() {
 
   // Create 5 other participants
   const participants = [
-    { name: 'John Doe', email: 'john@example.com' },
-    { name: 'Jane Smith', email: 'jane@example.com' },
+    {
+      name: 'John Doe',
+      email: 'john@example.com',
+      preferences: {
+        interests: 'Books, hiking, and photography',
+        sizes: 'L for shirts, 32/34 for pants',
+        wishlist: 'A new camera lens or hiking boots',
+        restrictions: 'No food items please',
+      },
+    },
+    {
+      name: 'Jane Smith',
+      email: 'jane@example.com',
+      preferences: {
+        interests: 'Cooking, gardening, and yoga',
+        sizes: 'M for tops, 8 for dresses',
+        wishlist: 'Kitchen gadgets or yoga accessories',
+        restrictions: 'No scented items',
+      },
+    },
     { name: 'Bob Wilson', email: 'bob@example.com' },
-    { name: 'Alice Brown', email: 'alice@example.com' },
+    {
+      name: 'Alice Brown',
+      email: 'alice@example.com',
+      preferences: {
+        interests: 'Art, music, and travel',
+        sizes: 'S for clothing',
+        wishlist: 'Art supplies or travel accessories',
+        restrictions: 'None',
+      },
+    },
     { name: 'Charlie Davis', email: 'charlie@example.com' },
   ];
 
-  await Promise.all(
+  const createdParticipants = await Promise.all(
     participants.map((p) =>
       participantModel.create({
         name: p.name,
         email: p.email,
         session: new Types.ObjectId(sessionId),
+        preferences: p.preferences || null,
       }),
     ),
   );
+
+  // Add all participants to the session
+  await sessionsService.updateSessionParticipants(sessionId, [
+    firstParticipant._id,
+    ...createdParticipants.map((p) => p._id),
+  ]);
 
   console.log('Seeding completed!');
   console.log('User created:', user.email);

@@ -10,13 +10,7 @@ let requestInterceptor: number | null = null;
 let responseInterceptor: number | null = null;
 
 // Public endpoints that don't require authentication
-const publicEndpoints = [
-  "/auth/login",
-  "/auth/register",
-  "/sessions/join",
-  "/sessions/:sessionId/participants/:participantId",
-  "/sessions/:sessionId/participants/:participantId/preferences",
-];
+const publicEndpoints = ["/auth/login", "/auth/register", "/sessions/join"];
 
 export const setupAxiosInterceptors = (getToken: () => string | null) => {
   // Remove existing interceptors

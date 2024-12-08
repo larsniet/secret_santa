@@ -4,13 +4,15 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Session, SessionDocument, SessionStatus } from './session.schema';
+import { ParticipantsService } from '../participants/participants.service';
 
 @Injectable()
 export class SessionsService {
   constructor(
     @InjectModel(Session.name) private sessionModel: Model<SessionDocument>,
+    private participantsService: ParticipantsService,
   ) {}
 
   async createSession(userId: string, name: string): Promise<Session> {
@@ -19,12 +21,17 @@ export class SessionsService {
       creator: userId,
       status: 'active',
       inviteCode: Math.random().toString(36).substring(2, 15),
+      participants: [],
     });
     return session.save();
   }
 
   async getUserSessions(userId: string): Promise<Session[]> {
-    return this.sessionModel.find({ creator: userId }).exec();
+    return this.sessionModel
+      .find({ creator: userId })
+      .populate('creator')
+      .populate('participants')
+      .exec();
   }
 
   async getSession(sessionId: string): Promise<Session> {
@@ -43,6 +50,7 @@ export class SessionsService {
     const session = await this.sessionModel
       .findOne({ inviteCode })
       .populate('creator')
+      .populate('participants')
       .exec();
     if (!session) {
       throw new NotFoundException('Session not found');
@@ -78,6 +86,11 @@ export class SessionsService {
     if (session.creator.toString() !== userId) {
       throw new UnauthorizedException('Not authorized to delete this session');
     }
+
+    // First delete all participants associated with this session
+    await this.participantsService.deleteAllFromSession(sessionId);
+
+    // Then delete the session
     await session.deleteOne();
   }
 
@@ -88,5 +101,17 @@ export class SessionsService {
         status: SessionStatus.ACTIVE,
       })
       .exec();
+  }
+
+  async updateSessionParticipants(
+    sessionId: string,
+    participantIds: Types.ObjectId[],
+  ): Promise<Session> {
+    const session = await this.sessionModel.findById(sessionId).exec();
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+    session.participants = participantIds;
+    return session.save();
   }
 }

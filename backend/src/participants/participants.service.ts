@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Participant } from './participant.schema';
 
 @Injectable()
@@ -11,7 +11,9 @@ export class ParticipantsService {
   ) {}
 
   async findAllBySession(sessionId: string): Promise<Participant[]> {
-    return this.participantModel.find({ session: sessionId }).exec();
+    return this.participantModel
+      .find({ session: new Types.ObjectId(sessionId) })
+      .exec();
   }
 
   async findParticipant(
@@ -20,8 +22,8 @@ export class ParticipantsService {
   ): Promise<Participant> {
     const participant = await this.participantModel
       .findOne({
-        _id: participantId,
-        session: sessionId,
+        _id: new Types.ObjectId(participantId),
+        session: new Types.ObjectId(sessionId),
       })
       .exec();
 
@@ -40,13 +42,15 @@ export class ParticipantsService {
     const participant = new this.participantModel({
       name: participantData.name,
       email: participantData.email,
-      session: participantData.sessionId,
+      session: new Types.ObjectId(participantData.sessionId),
     });
     return participant.save();
   }
 
   async deleteAllFromSession(sessionId: string): Promise<void> {
-    await this.participantModel.deleteMany({ session: sessionId }).exec();
+    await this.participantModel
+      .deleteMany({ session: new Types.ObjectId(sessionId) })
+      .exec();
   }
 
   async deleteParticipant(
@@ -55,8 +59,8 @@ export class ParticipantsService {
   ): Promise<void> {
     const participant = await this.participantModel
       .findOne({
-        _id: participantId,
-        session: sessionId,
+        _id: new Types.ObjectId(participantId),
+        session: new Types.ObjectId(sessionId),
       })
       .exec();
 
@@ -71,7 +75,9 @@ export class ParticipantsService {
     participantId: string,
     assignedToName: string,
   ): Promise<void> {
-    const participant = await this.participantModel.findById(participantId);
+    const participant = await this.participantModel
+      .findById(new Types.ObjectId(participantId))
+      .exec();
     if (!participant) {
       throw new NotFoundException('Participant not found');
     }
@@ -91,8 +97,8 @@ export class ParticipantsService {
   ): Promise<Participant> {
     const participant = await this.participantModel
       .findOne({
-        _id: participantId,
-        session: sessionId,
+        _id: new Types.ObjectId(participantId),
+        session: new Types.ObjectId(sessionId),
       })
       .exec();
 
