@@ -9,15 +9,31 @@
       "type": "image/x-icon"
     },
     {
-      "src": "favicon-96x96.png",
+      "src": "logo-96x96.png",
       "type": "image/png",
       "sizes": "96x96"
     },
     {
-      "src": "400x400.png",
+      "src": "logo-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "logo-180x180.png",
+      "type": "image/png",
+      "sizes": "180x180",
+      "purpose": "apple-touch-icon"
+    },
+    {
+      "src": "logo-400x400.png",
       "type": "image/png",
       "sizes": "400x400",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
   "start_url": ".",
