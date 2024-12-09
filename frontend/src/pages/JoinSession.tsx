@@ -32,9 +32,13 @@ export const JoinSession: React.FC = () => {
       const data = await sessionService.getSessionByInviteCode(code);
       setSession(data);
     } catch (err: any) {
+      console.error("Session loading error:", err);
       showAlert(
         "error",
-        err.response?.data?.message || "Failed to load session"
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Failed to load session"
       );
     } finally {
       setIsLoading(false);

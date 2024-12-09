@@ -13,10 +13,10 @@ import { ParticipantsService } from './participants.service';
 import { Participant } from './participant.schema';
 
 @Controller('sessions/:sessionId/participants')
-@UseGuards(JwtAuthGuard)
 export class ParticipantsController {
   constructor(private readonly participantsService: ParticipantsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(@Param('sessionId') sessionId: string): Promise<Participant[]> {
     return this.participantsService.findAllBySession(sessionId);
@@ -33,6 +33,7 @@ export class ParticipantsController {
     });
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete()
   async deleteAll(
     @Param('sessionId') sessionId: string,
@@ -41,6 +42,7 @@ export class ParticipantsController {
     return { message: 'All participants deleted successfully' };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':participantId')
   async deleteParticipant(
     @Param('sessionId') sessionId: string,
