@@ -1,88 +1,33 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useAlert } from "../contexts/AlertContext";
+import React, { useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
+import { useAlert } from "../contexts/AlertContext";
 import { authService } from "../services/auth.service";
 
 export const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { showAlert } = useAlert();
-  const { setupAuth } = useAuth();
-  const [isVerifying, setIsVerifying] = useState(true);
-  const [isResending, setIsResending] = useState(false);
-  const [email, setEmail] = useState("");
-  const [verificationStatus, setVerificationStatus] = useState<
-    "verifying" | "success" | "error"
-  >("verifying");
-  const [hasNavigated, setHasNavigated] = useState(false);
-  const [hasAttemptedVerification, setHasAttemptedVerification] =
-    useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState(searchParams.get("email") || "");
 
-  const verifyEmail = useCallback(async () => {
-    const token = searchParams.get("token");
-    if (!token || hasAttemptedVerification) {
-      setVerificationStatus("error");
-      setIsVerifying(false);
+  const handleResendVerification = async () => {
+    if (!email) {
+      showAlert("error", "Please enter your email address");
       return;
     }
 
-    setHasAttemptedVerification(true);
-
     try {
-      const response = await authService.verifyEmail(token);
-
-      if (response.access_token && response.user) {
-        // First set up authentication
-        localStorage.setItem("token", response.access_token);
-        localStorage.setItem("user", JSON.stringify(response.user));
-        await setupAuth(response.access_token, response.user);
-
-        // Then update UI state and show alert
-        setVerificationStatus("success");
-        showAlert(
-          "success",
-          "Email verified successfully! Redirecting to dashboard..."
-        );
-
-        // Navigate to dashboard
-        setTimeout(() => {
-          navigate("/dashboard", { replace: true });
-        }, 500);
-      }
-    } catch (err: any) {
-      setVerificationStatus("error");
-      showAlert(
-        "error",
-        err.response?.data?.message || "Failed to verify email"
-      );
-    } finally {
-      setIsVerifying(false);
-    }
-  }, [searchParams, navigate, showAlert, setupAuth, hasAttemptedVerification]);
-
-  useEffect(() => {
-    verifyEmail();
-  }, [verifyEmail]);
-
-  const handleResendVerification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setIsResending(true);
-    try {
+      setIsLoading(true);
       await authService.resendVerification(email);
-      showAlert("success", "Verification email has been resent!");
-      setEmail("");
+      showAlert("success", "Verification email has been resent");
     } catch (err: any) {
       showAlert(
         "error",
         err.response?.data?.message || "Failed to resend verification email"
       );
     } finally {
-      setIsResending(false);
+      setIsLoading(false);
     }
   };
 
@@ -90,34 +35,12 @@ export const VerifyEmail: React.FC = () => {
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center">
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow">
-          {isVerifying ? (
+          {isLoading ? (
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 Verifying your email...
               </h2>
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C] mx-auto"></div>
-            </div>
-          ) : verificationStatus === "success" ? (
-            <div className="text-center">
-              <svg
-                className="h-16 w-16 text-green-500 mx-auto mb-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Email Verified!
-              </h2>
-              <p className="text-gray-600 mb-8">
-                You'll be redirected to your dashboard shortly...
-              </p>
             </div>
           ) : (
             <div>
@@ -164,10 +87,10 @@ export const VerifyEmail: React.FC = () => {
 
                 <Button
                   type="submit"
-                  disabled={isResending || !email}
+                  disabled={isLoading || !email}
                   className="w-full"
                 >
-                  {isResending ? "Resending..." : "Resend Verification Email"}
+                  {isLoading ? "Resending..." : "Resend Verification Email"}
                 </Button>
 
                 <div className="text-center mt-4">

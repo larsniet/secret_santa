@@ -5,45 +5,34 @@ import { useAlert } from "../../contexts/AlertContext";
 import { Button } from "../common/Button";
 
 export const RegisterForm: React.FC = () => {
+  const navigate = useNavigate();
   const { register } = useAuth();
   const { showAlert } = useAlert();
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
-    plan: "FREE",
+    confirmPassword: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (formData.password !== formData.confirmPassword) {
+      showAlert("error", "Passwords do not match");
+      return;
+    }
 
     try {
-      const response = await register(
-        formData.name,
-        formData.email,
-        formData.password,
-        formData.plan
-      );
+      setIsLoading(true);
+      await register(formData.name, formData.email, formData.password);
       showAlert(
         "success",
-        "Registration successful. Please check your email to verify your account."
+        "Registration successful! Please verify your email."
       );
-      navigate("/login", { replace: true });
+      navigate("/login");
     } catch (err: any) {
-      if (
-        err.response?.status === 401 &&
-        err.response?.data?.message?.includes("already registered")
-      ) {
-        showAlert(
-          "error",
-          "This email is already registered. Please sign in instead."
-        );
-      } else {
-        showAlert("error", err.response?.data?.message || "Failed to register");
-      }
+      showAlert("error", err.response?.data?.message || "Failed to register");
     } finally {
       setIsLoading(false);
     }
@@ -131,6 +120,30 @@ export const RegisterForm: React.FC = () => {
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
+                  }
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      confirmPassword: e.target.value,
+                    })
                   }
                   className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
                 />

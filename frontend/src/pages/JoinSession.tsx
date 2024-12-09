@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
@@ -26,11 +26,7 @@ export const JoinSession: React.FC = () => {
     restrictions: "",
   });
 
-  useEffect(() => {
-    loadSession();
-  }, [code]);
-
-  const loadSession = async () => {
+  const loadSession = useCallback(async () => {
     if (!code) return;
     try {
       const data = await sessionService.getSessionByInviteCode(code);
@@ -43,7 +39,11 @@ export const JoinSession: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [code, showAlert]);
+
+  useEffect(() => {
+    loadSession();
+  }, [loadSession]);
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();

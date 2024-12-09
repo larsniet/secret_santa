@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from "react";
-import {
-  useNavigate,
-  Link,
-  useLocation,
-  useSearchParams,
-} from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAlert } from "../../contexts/AlertContext";
 import { Button } from "../common/Button";
 import { authService } from "../../services/auth.service";
 
 export const LoginForm: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { login, setupAuth } = useAuth();
   const { showAlert } = useAlert();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const token = searchParams.get("token");

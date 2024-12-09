@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
@@ -22,12 +22,9 @@ export const Dashboard: React.FC = () => {
   });
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
 
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  const loadSessions = async () => {
+  const loadSessions = useCallback(async () => {
     try {
+      setIsLoading(true);
       const data = await sessionService.getMySessions();
       setSessions(data);
     } catch (err: any) {
@@ -38,7 +35,11 @@ export const Dashboard: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [showAlert]);
+
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
 
   const handleDelete = async () => {
     if (!sessionToDelete) return;

@@ -87,7 +87,7 @@ export const SessionDetail: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, navigate, showAlert]);
 
   useEffect(() => {
     loadSessionAndParticipants();
