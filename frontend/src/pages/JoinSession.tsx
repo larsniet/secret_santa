@@ -33,7 +33,7 @@ export const JoinSession: React.FC = () => {
   const loadSession = async () => {
     if (!code) return;
     try {
-      const data = await sessionService.getSession(code);
+      const data = await sessionService.getSessionByInviteCode(code);
       setSession(data);
     } catch (err: any) {
       showAlert(
@@ -47,7 +47,7 @@ export const JoinSession: React.FC = () => {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!session) return;
+    if (!session?._id) return;
 
     try {
       setIsLoading(true);
