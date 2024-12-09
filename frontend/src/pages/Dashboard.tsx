@@ -4,11 +4,9 @@ import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
 import { useAlert } from "../contexts/AlertContext";
 import { sessionService, Session } from "../services/session.service";
-import { loadStripe } from "@stripe/stripe-js";
+import { stripePromise } from "../lib/stripe";
 import { EventPlan, PLAN_LIMITS } from "../types/plans";
 import { Loading } from "../components/common/Loading";
-
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || "");
 
 export const Dashboard: React.FC = () => {
   const { showAlert } = useAlert();

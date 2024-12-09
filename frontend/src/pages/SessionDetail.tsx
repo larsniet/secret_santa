@@ -10,6 +10,7 @@ import {
 import { useAlert } from "../contexts/AlertContext";
 import { Loading } from "../components/common/Loading";
 import { PLAN_LIMITS, EventPlan } from "../types/plans";
+import { stripePromise } from "../lib/stripe";
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +39,13 @@ export const SessionDetail: React.FC = () => {
     wishlist: "",
     restrictions: "",
   });
+  const [selectedPlan, setSelectedPlan] = useState<EventPlan | null>(null);
+
+  useEffect(() => {
+    if (session) {
+      setSelectedPlan(session.plan as EventPlan);
+    }
+  }, [session]);
 
   const loadSessionAndParticipants = useCallback(async () => {
     if (!id) return;
@@ -328,16 +336,169 @@ export const SessionDetail: React.FC = () => {
             </div>
             {participants.length >=
             PLAN_LIMITS[session.plan as EventPlan].maxParticipants ? (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-yellow-700">
-                  You've reached the maximum number of participants for your{" "}
-                  {session.plan} plan.{" "}
-                  {session.plan !== EventPlan.BUSINESS && (
-                    <span>
-                      Please upgrade your plan to add more participants.
-                    </span>
-                  )}
-                </p>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Upgrade Plan
+                  </h2>
+                  <p className="text-sm text-yellow-700">
+                    You've reached the maximum number of participants for your{" "}
+                    {session.plan} plan
+                  </p>
+                </div>
+
+                {session.plan !== EventPlan.BUSINESS && (
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-4">
+                        Select Plan
+                      </label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {Object.entries(PLAN_LIMITS).map(([plan, details]) => {
+                          const isLowerTier =
+                            plan === EventPlan.FREE ||
+                            (plan === EventPlan.GROUP &&
+                              session.plan === EventPlan.BUSINESS);
+
+                          // Calculate price with potential discount
+                          const displayPrice =
+                            plan === EventPlan.BUSINESS &&
+                            session.plan === EventPlan.GROUP
+                              ? 6 // Discounted price for GROUP to BUSINESS upgrade
+                              : details.price;
+
+                          return (
+                            <div
+                              key={plan}
+                              className={`relative rounded-lg border p-4 ${
+                                isLowerTier
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "cursor-pointer " +
+                                    (plan === selectedPlan
+                                      ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
+                                      : "border-gray-200 hover:border-[#B91C1C]")
+                              }`}
+                              onClick={() => {
+                                if (!isLowerTier && plan !== session.plan) {
+                                  setSelectedPlan(plan as EventPlan);
+                                }
+                              }}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h3 className="text-sm font-medium text-gray-900">
+                                    {plan}
+                                  </h3>
+                                  <p className="mt-1 text-sm text-gray-500">
+                                    {displayPrice === 0
+                                      ? "Free"
+                                      : `€${displayPrice}`}
+                                    {plan === EventPlan.BUSINESS &&
+                                      session.plan === EventPlan.GROUP && (
+                                        <span className="ml-2 text-xs text-green-600">
+                                          40% off upgrade
+                                        </span>
+                                      )}
+                                  </p>
+                                  {isLowerTier && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                      Cannot downgrade to a lower tier
+                                    </p>
+                                  )}
+                                </div>
+                                <div
+                                  className={`h-5 w-5 rounded-full border ${
+                                    plan === selectedPlan && !isLowerTier
+                                      ? "border-[#B91C1C] bg-[#B91C1C]"
+                                      : "border-gray-300 bg-white"
+                                  } flex items-center justify-center`}
+                                >
+                                  {plan === selectedPlan && !isLowerTier && (
+                                    <svg
+                                      className="h-3 w-3 text-white"
+                                      fill="currentColor"
+                                      viewBox="0 0 12 12"
+                                    >
+                                      <path d="M3.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L5 6.586 3.707 5.293z" />
+                                    </svg>
+                                  )}
+                                </div>
+                              </div>
+                              <ul className="mt-2 space-y-1">
+                                {details.features.map(
+                                  (feature: string, index: number) => (
+                                    <li
+                                      key={index}
+                                      className="flex items-start"
+                                    >
+                                      <svg
+                                        className="h-4 w-4 text-[#B91C1C] mt-0.5 mr-2"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                      <span className="text-xs text-gray-500">
+                                        {feature}
+                                      </span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setSelectedPlan(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          if (selectedPlan && selectedPlan !== session.plan) {
+                            try {
+                              const updatedSession =
+                                await sessionService.createCheckoutSession(
+                                  session._id
+                                );
+                              const stripe = await stripePromise;
+                              if (!stripe)
+                                throw new Error(
+                                  "Failed to load payment system"
+                                );
+                              await stripe.redirectToCheckout({
+                                sessionId: updatedSession.id,
+                              });
+                            } catch (err: any) {
+                              showAlert(
+                                "error",
+                                err.response?.data?.message ||
+                                  "Failed to initiate upgrade"
+                              );
+                            }
+                          }
+                        }}
+                        disabled={
+                          !selectedPlan || selectedPlan === session.plan
+                        }
+                      >
+                        Continue to Payment
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <form onSubmit={handleAddParticipant}>
