@@ -58,6 +58,22 @@ export const Dashboard: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Check if trying to create a free session
+      if (formData.plan === EventPlan.FREE) {
+        // Check for existing active free sessions
+        const existingFreeSessions = sessions.filter(
+          (s) => s.plan === EventPlan.FREE && s.status === "active"
+        );
+        if (existingFreeSessions.length > 0) {
+          showAlert(
+            "error",
+            "You can only have one active free session. Please upgrade to a paid plan or complete/delete your existing free session."
+          );
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       const session = await sessionService.createSession(formData);
 
       // If it's a paid plan, redirect to payment
@@ -164,72 +180,96 @@ export const Dashboard: React.FC = () => {
                   Select Plan
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {Object.entries(PLAN_LIMITS).map(([plan, details]) => (
-                    <div
-                      key={plan}
-                      className={`relative rounded-lg border p-4 cursor-pointer ${
-                        formData.plan === plan
-                          ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
-                          : "border-gray-200 hover:border-[#B91C1C]"
-                      }`}
-                      onClick={() =>
-                        setFormData({ ...formData, plan: plan as EventPlan })
-                      }
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-900">
-                            {plan}
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-500">
-                            {details.price === 0 ? "Free" : `€${details.price}`}
-                            {details.price > 0 && " per event"}
-                          </p>
+                  {Object.entries(PLAN_LIMITS).map(([plan, details]) => {
+                    const hasActiveFreeSession =
+                      plan === EventPlan.FREE &&
+                      sessions.some(
+                        (s) =>
+                          s.plan === EventPlan.FREE && s.status === "active"
+                      );
+
+                    return (
+                      <div
+                        key={plan}
+                        className={`relative rounded-lg border p-4 ${
+                          hasActiveFreeSession
+                            ? "opacity-50 cursor-not-allowed"
+                            : "cursor-pointer " +
+                              (formData.plan === plan
+                                ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
+                                : "border-gray-200 hover:border-[#B91C1C]")
+                        }`}
+                        onClick={() => {
+                          if (!hasActiveFreeSession) {
+                            setFormData({
+                              ...formData,
+                              plan: plan as EventPlan,
+                            });
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {plan}
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                              {details.price === 0
+                                ? "Free"
+                                : `€${details.price}`}
+                            </p>
+                            {hasActiveFreeSession && (
+                              <p className="mt-1 text-xs text-red-600">
+                                You already have an active free session
+                              </p>
+                            )}
+                          </div>
+                          <div
+                            className={`h-5 w-5 rounded-full border ${
+                              formData.plan === plan && !hasActiveFreeSession
+                                ? "border-[#B91C1C] bg-[#B91C1C]"
+                                : "border-gray-300 bg-white"
+                            } flex items-center justify-center`}
+                          >
+                            {formData.plan === plan &&
+                              !hasActiveFreeSession && (
+                                <svg
+                                  className="h-3 w-3 text-white"
+                                  fill="currentColor"
+                                  viewBox="0 0 12 12"
+                                >
+                                  <path d="M3.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L5 6.586 3.707 5.293z" />
+                                </svg>
+                              )}
+                          </div>
                         </div>
-                        <div
-                          className={`h-5 w-5 rounded-full border flex items-center justify-center ${
-                            formData.plan === plan
-                              ? "border-[#B91C1C] bg-[#B91C1C]"
-                              : "border-gray-300"
-                          }`}
-                        >
-                          {formData.plan === plan && (
-                            <svg
-                              className="h-3 w-3 text-white"
-                              viewBox="0 0 12 12"
-                              fill="currentColor"
-                            >
-                              <path d="M3.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L5 6.586 3.707 5.293z" />
-                            </svg>
+                        <ul className="mt-2 space-y-1">
+                          {details.features.map(
+                            (feature: string, index: number) => (
+                              <li key={index} className="flex items-start">
+                                <svg
+                                  className="h-4 w-4 text-[#B91C1C] mt-0.5 mr-2"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                                <span className="text-xs text-gray-500">
+                                  {feature}
+                                </span>
+                              </li>
+                            )
                           )}
-                        </div>
+                        </ul>
                       </div>
-                      <ul className="mt-2 space-y-1">
-                        {details.features.map(
-                          (feature: string, index: number) => (
-                            <li key={index} className="flex items-start">
-                              <svg
-                                className="h-4 w-4 text-[#B91C1C] mt-0.5 mr-2"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                              <span className="text-xs text-gray-500">
-                                {feature}
-                              </span>
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
