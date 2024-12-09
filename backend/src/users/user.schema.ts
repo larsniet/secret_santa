@@ -26,24 +26,24 @@ export const UserSchema = SchemaFactory.createForClass(User);
 
 export const PLAN_LIMITS = {
   [EventPlan.FREE]: {
-    maxParticipants: 15,
+    maxParticipants: 5,
     price: 0,
     features: [
       'Basic matching algorithm',
       'Email notifications',
       'Gift preferences & wishlists',
-      'Up to 10 participants',
+      'Up to 5 participants',
       '1 event at a time',
     ],
   },
   [EventPlan.GROUP]: {
-    maxParticipants: 50,
+    maxParticipants: 25,
     price: 4,
     features: [
       'Smart matching algorithm',
       'Custom event themes',
       'Gift preferences & wishlists',
-      'Up to 50 participants',
+      'Up to 25 participants',
       'Budget setting',
     ],
   },

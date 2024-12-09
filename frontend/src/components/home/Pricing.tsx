@@ -8,7 +8,7 @@ export const Pricing: React.FC = () => {
       price: "€0",
       description: "Perfect for small groups",
       features: [
-        "Up to 10 participants",
+        "Up to 5 participants",
         "Basic matching algorithm",
         "Email notifications",
         "Gift preferences & wishlists",
@@ -20,7 +20,7 @@ export const Pricing: React.FC = () => {
       price: "€4",
       description: "Great for larger groups & families",
       features: [
-        "Up to 50 participants",
+        "Up to 25 participants",
         "Smart matching algorithm",
         "Custom event themes",
         "Gift preferences & wishlists",

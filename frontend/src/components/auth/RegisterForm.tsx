@@ -11,7 +11,7 @@ const PLANS = [
     features: [
       "Create 1 Secret Santa session",
       "Basic email notifications",
-      "Up to 10 participants",
+      "Up to 5 participants",
     ],
   },
   {
@@ -20,7 +20,7 @@ const PLANS = [
     features: [
       "Create 5 Secret Santa sessions",
       "Custom email templates",
-      "Up to 50 participants",
+      "Up to 25 participants",
       "Gift preferences",
     ],
   },

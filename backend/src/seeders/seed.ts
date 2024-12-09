@@ -7,7 +7,7 @@ import { User } from '../users/user.schema';
 import { EventPlan } from '../users/user.schema';
 import { Participant } from '../participants/participant.schema';
 import { SessionsService } from '../sessions/sessions.service';
-import { Session } from '../sessions/session.schema';
+import { Session, SessionStatus } from '../sessions/session.schema';
 
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -25,7 +25,6 @@ async function seed() {
     name: 'Santa',
     email: 'santa@plansecretsanta.com',
     password: hashedPassword,
-    plan: EventPlan.FREE,
   });
 
   const userId = user._id.toString();
@@ -33,8 +32,13 @@ async function seed() {
   // Create session using the service
   const session = (await sessionsService.createSession(userId, {
     name: 'Family Christmas 2023',
-    plan: EventPlan.FREE,
+    plan: EventPlan.GROUP,
   })) as Session & { _id: Types.ObjectId };
+  session.status = SessionStatus.ACTIVE;
+  await sessionModel.updateOne(
+    { _id: session._id },
+    { status: SessionStatus.ACTIVE },
+  );
   const sessionId = session._id.toString();
 
   // Create first participant (the creator)

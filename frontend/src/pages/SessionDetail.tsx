@@ -9,6 +9,7 @@ import {
 } from "../services/participant.service";
 import { useAlert } from "../contexts/AlertContext";
 import { Loading } from "../components/common/Loading";
+import { PLAN_LIMITS, EventPlan } from "../types/plans";
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -71,6 +72,16 @@ export const SessionDetail: React.FC = () => {
   const handleAddParticipant = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!session) return;
+
+    // Check participant limit based on plan
+    const planLimit = PLAN_LIMITS[session.plan as EventPlan].maxParticipants;
+    if (participants.length >= planLimit) {
+      showAlert(
+        "error",
+        `Your ${session.plan} plan is limited to ${planLimit} participants. Please upgrade your plan to add more participants.`
+      );
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -305,44 +316,66 @@ export const SessionDetail: React.FC = () => {
 
         {session.status === "active" && (
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Add Participant
-            </h2>
-            <form onSubmit={handleAddParticipant}>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <input
-                  type="text"
-                  value={newParticipant.name}
-                  onChange={(e) =>
-                    setNewParticipant({
-                      ...newParticipant,
-                      name: e.target.value,
-                    })
-                  }
-                  placeholder="Name"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
-                  required
-                  disabled={isSubmitting}
-                />
-                <input
-                  type="email"
-                  value={newParticipant.email}
-                  onChange={(e) =>
-                    setNewParticipant({
-                      ...newParticipant,
-                      email: e.target.value,
-                    })
-                  }
-                  placeholder="Email address"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
-                  required
-                  disabled={isSubmitting}
-                />
-                <Button type="submit" isLoading={isSubmitting}>
-                  Add Participant
-                </Button>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Add Participant
+              </h2>
+              <div className="text-sm text-gray-500">
+                {participants.length} /{" "}
+                {PLAN_LIMITS[session.plan as EventPlan].maxParticipants}{" "}
+                participants
               </div>
-            </form>
+            </div>
+            {participants.length >=
+            PLAN_LIMITS[session.plan as EventPlan].maxParticipants ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-yellow-700">
+                  You've reached the maximum number of participants for your{" "}
+                  {session.plan} plan.{" "}
+                  {session.plan !== EventPlan.BUSINESS && (
+                    <span>
+                      Please upgrade your plan to add more participants.
+                    </span>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleAddParticipant}>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <input
+                    type="text"
+                    value={newParticipant.name}
+                    onChange={(e) =>
+                      setNewParticipant({
+                        ...newParticipant,
+                        name: e.target.value,
+                      })
+                    }
+                    placeholder="Name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                    required
+                    disabled={isSubmitting}
+                  />
+                  <input
+                    type="email"
+                    value={newParticipant.email}
+                    onChange={(e) =>
+                      setNewParticipant({
+                        ...newParticipant,
+                        email: e.target.value,
+                      })
+                    }
+                    placeholder="Email address"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                    required
+                    disabled={isSubmitting}
+                  />
+                  <Button type="submit" isLoading={isSubmitting}>
+                    Add Participant
+                  </Button>
+                </div>
+              </form>
+            )}
           </div>
         )}
 

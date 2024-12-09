@@ -1,13 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Participant } from './participant.schema';
+import { PLAN_LIMITS } from '../users/user.schema';
+import { SessionsService } from '../sessions/sessions.service';
 
 @Injectable()
 export class ParticipantsService {
   constructor(
     @InjectModel(Participant.name)
     private participantModel: Model<Participant>,
+    @Inject(forwardRef(() => SessionsService))
+    private sessionsService: SessionsService,
   ) {}
 
   async findAllBySession(sessionId: string): Promise<Participant[]> {
@@ -39,6 +49,24 @@ export class ParticipantsService {
     email: string;
     sessionId: string;
   }): Promise<Participant> {
+    // Get the session to check the plan
+    const session = await this.sessionsService.getSession(
+      participantData.sessionId,
+    );
+
+    // Get current participant count
+    const currentParticipants = await this.findAllBySession(
+      participantData.sessionId,
+    );
+    const planLimit = PLAN_LIMITS[session.plan].maxParticipants;
+
+    // Check if adding another participant would exceed the plan limit
+    if (currentParticipants.length >= planLimit) {
+      throw new BadRequestException(
+        `Cannot add more participants. Your ${session.plan} plan is limited to ${planLimit} participants.`,
+      );
+    }
+
     const participant = new this.participantModel({
       name: participantData.name,
       email: participantData.email,
