@@ -4,25 +4,29 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#B91C1C" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Secret Santa" />
 
     <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://plansecretsanta.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Preload critical hero image -->
+    <!-- Load hero images -->
     <link
-      rel="preload"
-      as="image"
+      rel="prefetch"
       href="%PUBLIC_URL%/images/hero-400.webp"
+      as="image"
       type="image/webp"
-      media="(max-width: 640px)"
+      fetchpriority="low"
     />
     <link
-      rel="preload"
-      as="image"
+      rel="prefetch"
       href="%PUBLIC_URL%/images/hero-600.webp"
+      as="image"
       type="image/webp"
-      media="(min-width: 641px)"
+      fetchpriority="low"
     />
 
     <meta
@@ -121,39 +125,14 @@
     />
 
     <!-- PWA Support -->
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Secret Santa" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
-    <!-- Preload Critical Fonts -->
+    <!-- Load Fonts -->
     <link
-      rel="preload"
-      href="%PUBLIC_URL%/fonts/inter-regular.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="%PUBLIC_URL%/fonts/inter-medium.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="%PUBLIC_URL%/fonts/inter-semibold.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link
-      rel="preload"
-      href="%PUBLIC_URL%/fonts/inter-bold.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
+      rel="stylesheet"
+      href="%PUBLIC_URL%/fonts/inter.css"
+      media="print"
+      onload="this.media='all'"
     />
 
     <title>Secret Santa - Gift Exchange Made Easy</title>
@@ -165,6 +144,22 @@
         background-image: url("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4QBKRXhpZgAASUkqAAgAAAACAA4BAgASAAAAJgAAAJiCAgAKAAAAOAAAAAAAAABDaHJpc3RtYXMgZGVjb3JhdGlvbnMgd2l0aCBnaWZ0cyBhbmQgb3JuYW1lbnRzAP/bAIQAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB/8AAEQgACAAMAwERAAIRAQMRAf/EAaIAAAAGAgMBAAAAAAAAAAAAAAcIBgUECQMKAgEACwEAAAYDAQEBAAAAAAAAAAAABgUEAwcIAgEJAAsQAAIBAwQBAwMCAwMDAgYJdQECAwQRBRIGIQcTIgAIMRRBMiMVCVFCFmEkMxdSI4FFJDQYK8JyggkKFhcYGRolJicoKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+gEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoLEQACAQIEBAMEBwUEBAABAncAAQIDEQQFEiExBhNBUWFxIgMygZEHFKGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A9U0srcinYlVUlmZjZVVQWZmJ0AABJ8AD+PfuvdM1Vk8bQh/uKmGFo1LtG8qK4QfqYKxJUfn37r3RAO3PkD1L0/X1NDnuwsHQ5WgLmXD0eRx9VmjYkWqKWhnWaWBv9TqgVD/X37r3XHo/5H9NfIDJV+F6v7CxOezOLppK6qx8FPkqWrkooZEikmhgrYYJpYw8iLqQEXYe/de6//Z");
         background-size: cover;
         background-position: center;
+      }
+
+      /* Preload critical fonts */
+      @font-face {
+        font-family: "Inter";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url("%PUBLIC_URL%/fonts/inter-regular.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "Inter";
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url("%PUBLIC_URL%/fonts/inter-semibold.woff2") format("woff2");
       }
     </style>
   </head>

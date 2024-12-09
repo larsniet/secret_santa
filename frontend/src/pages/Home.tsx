@@ -78,7 +78,6 @@ export const Home: React.FC = () => {
                   decoding="async"
                   width="400"
                   height="267"
-                  fetchPriority="high"
                 />
               </picture>
             </div>
