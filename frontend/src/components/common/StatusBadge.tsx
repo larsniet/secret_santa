@@ -35,12 +35,14 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
     type === "status" ? getStatusStyles(value) : getPlanStyles(value);
   const displayText =
     type === "status"
-      ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
+      ? value === "pending_payment"
+        ? "Pending Payment"
+        : value.charAt(0).toUpperCase() + value.slice(1).toLowerCase()
       : `${value.charAt(0).toUpperCase() + value.toLowerCase().slice(1)} Plan`;
 
   return (
     <span
-      className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center border ${styles}`}
+      className={`px-3 py-2 rounded-md text-sm font-medium inline-flex items-center border ${styles}`}
     >
       {displayText}
     </span>

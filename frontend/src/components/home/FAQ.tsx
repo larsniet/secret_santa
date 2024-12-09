@@ -45,7 +45,10 @@ export const FAQ: React.FC = () => {
     <div className="bg-white py-16 sm:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-base font-semibold text-[#B91C1C] tracking-wide uppercase">
+          <h2
+            id="faq-heading"
+            className="text-base font-semibold text-[#B91C1C] tracking-wide uppercase"
+          >
             FAQ
           </h2>
           <p className="mt-2 text-3xl font-extrabold text-gray-900 sm:text-4xl">
@@ -62,11 +65,14 @@ export const FAQ: React.FC = () => {
               <button
                 className="py-6 w-full flex justify-between items-center text-left"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                aria-expanded={openIndex === index}
+                aria-controls={`faq-answer-${index}`}
+                id={`faq-question-${index}`}
               >
                 <span className="text-lg font-medium text-gray-900">
                   {faq.question}
                 </span>
-                <span className="ml-6 flex-shrink-0">
+                <span className="ml-6 flex-shrink-0" aria-hidden="true">
                   <svg
                     className={`w-6 h-6 text-gray-400 transform ${
                       openIndex === index ? "rotate-180" : ""
@@ -84,11 +90,15 @@ export const FAQ: React.FC = () => {
                   </svg>
                 </span>
               </button>
-              {openIndex === index && (
-                <div className="pb-6">
-                  <p className="text-base text-gray-500">{faq.answer}</p>
-                </div>
-              )}
+              <div
+                id={`faq-answer-${index}`}
+                role="region"
+                aria-labelledby={`faq-question-${index}`}
+                hidden={openIndex !== index}
+                className={openIndex === index ? "pb-6" : "hidden"}
+              >
+                <p className="text-base text-gray-500">{faq.answer}</p>
+              </div>
             </div>
           ))}
         </div>

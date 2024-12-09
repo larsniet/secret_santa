@@ -424,7 +424,7 @@ export const Dashboard: React.FC = () => {
                                 <h3 className="text-lg font-medium text-gray-900 mb-1">
                                   {session.name}
                                 </h3>
-                                <div className="flex items-center gap-2 mb-3">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-3">
                                   <StatusBadge
                                     type="status"
                                     value={session.status}
@@ -521,7 +521,7 @@ export const Dashboard: React.FC = () => {
                               <h3 className="text-lg font-medium text-gray-900 mb-1">
                                 {session.name}
                               </h3>
-                              <div className="flex items-center gap-2 mb-3">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-3">
                                 <StatusBadge
                                   type="status"
                                   value={session.status}

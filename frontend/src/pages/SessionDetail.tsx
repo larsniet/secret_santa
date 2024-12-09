@@ -292,110 +292,21 @@ export const SessionDetail: React.FC = () => {
     <Layout>
       <BackButton />
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            {isEditingName ? (
-              <div className="flex items-center gap-2">
-                <div className="relative w-full">
-                  <input
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value.slice(0, 50))}
-                    className="text-3xl font-bold text-gray-900 border-b border-gray-300 focus:border-[#B91C1C] focus:outline-none bg-transparent w-full pr-16"
-                    autoFocus
-                    maxLength={50}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleNameSave();
-                      } else if (e.key === "Escape") {
-                        setIsEditingName(false);
-                      }
-                    }}
-                  />
-                  <span className="absolute right-0 bottom-2 text-sm text-gray-400">
-                    {editedName.length}/50
-                  </span>
-                </div>
-                <button
-                  onClick={handleNameSave}
-                  disabled={
-                    isSubmitting || !editedName.trim() || editedName.length > 50
-                  }
-                  className="text-green-600 hover:text-green-700 disabled:opacity-50"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setIsEditingName(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {session?.name}
-                </h1>
-                {session?.status !== "completed" && (
-                  <button
-                    onClick={() => {
-                      setEditedName(session?.name || "");
-                      setIsEditingName(true);
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                      />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              {session.name}
+            </h1>
+            <p className="text-sm text-gray-500">
               Created on{" "}
-              {new Date(session?.createdAt || "").toLocaleDateString("en-GB", {
+              {new Date(session.createdAt).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <StatusBadge type="status" value={session.status} />
             <StatusBadge type="plan" value={session.plan} />
             {session.status === "pending_payment" && (

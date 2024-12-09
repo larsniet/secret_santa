@@ -9,6 +9,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Secret Santa" />
 
+    <!-- SEO Meta Tags -->
+    <title>Secret Santa - Gift Exchange Made Easy | Plan Secret Santa</title>
+    <meta
+      name="description"
+      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place. Free and easy to use!"
+    />
+    <meta
+      name="keywords"
+      content="Secret Santa, gift exchange, Christmas, holiday, gift giving, wishlist, gift organizer, Secret Santa generator, gift exchange organizer"
+    />
+    <meta name="author" content="Lars van der Niet" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://plansecretsanta.com" />
+
     <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://plansecretsanta.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,16 +43,6 @@
       fetchpriority="low"
     />
 
-    <meta
-      name="description"
-      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
-    />
-    <meta
-      name="keywords"
-      content="Secret Santa, gift exchange, Christmas, holiday, gift giving, wishlist"
-    />
-    <meta name="author" content="Lars van der Niet" />
-
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://plansecretsanta.com" />
@@ -49,7 +53,7 @@
     />
     <meta
       property="og:description"
-      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
+      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place. Free and easy to use!"
     />
 
     <!-- Primary Open Graph Image -->
@@ -92,7 +96,7 @@
     />
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@plansecretsanta" />
     <meta name="twitter:creator" content="@larsniet" />
     <meta name="twitter:url" content="https://plansecretsanta.com" />
@@ -102,11 +106,11 @@
     />
     <meta
       name="twitter:description"
-      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place."
+      content="Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place. Free and easy to use!"
     />
     <meta
       name="twitter:image"
-      content="https://plansecretsanta.com/og-image-400x400.png"
+      content="https://plansecretsanta.com/og-image-1200x630.png"
     />
 
     <!-- Favicons -->
@@ -135,7 +139,35 @@
       onload="this.media='all'"
     />
 
-    <title>Secret Santa - Gift Exchange Made Easy</title>
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Plan Secret Santa",
+        "description": "Organize your Secret Santa gift exchange easily and securely. Create sessions, invite participants, and manage wishlists all in one place.",
+        "url": "https://plansecretsanta.com",
+        "applicationCategory": "Lifestyle",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Lars van der Niet"
+        },
+        "screenshot": "https://plansecretsanta.com/og-image-1200x630.png",
+        "featureList": [
+          "Create gift exchange sessions",
+          "Invite participants",
+          "Manage wishlists",
+          "Automatic gift assignments",
+          "Free to use"
+        ]
+      }
+    </script>
 
     <!-- Inline critical styles -->
     <style>
