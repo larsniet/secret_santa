@@ -4,8 +4,6 @@ import {
   Body,
   Headers,
   UseGuards,
-  Request,
-  RawBodyRequest,
   Req,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -24,11 +22,12 @@ export class SubscriptionsController {
   @Post('webhook')
   async handleWebhook(
     @Headers('stripe-signature') signature: string,
-    @Req() request: RawBodyRequest<Request>,
+    @Req() request: any,
   ) {
-    return this.subscriptionsService.handleWebhook(
-      signature,
-      request.rawBody as Buffer,
-    );
+    const payload = request.body;
+    if (!payload) {
+      throw new Error('No webhook payload was provided');
+    }
+    return this.subscriptionsService.handleWebhook(signature, payload);
   }
 }
