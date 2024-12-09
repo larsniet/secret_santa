@@ -16,6 +16,18 @@ export interface AuthResponse {
     id: string;
     email: string;
     name: string;
+    isEmailVerified: boolean;
+  };
+}
+
+export interface VerificationResponse {
+  message: string;
+  access_token?: string;
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+    isEmailVerified: boolean;
   };
 }
 
@@ -34,10 +46,28 @@ class AuthService {
     return response.data;
   }
 
-  async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>("/auth/register", data);
-    this.setToken(response.data.access_token);
-    setupAxiosInterceptors(() => response.data.access_token);
+  async register(
+    data: RegisterData
+  ): Promise<{ message: string; user: AuthResponse["user"] }> {
+    const response = await api.post<{
+      message: string;
+      user: AuthResponse["user"];
+    }>("/auth/register", data);
+    return response.data;
+  }
+
+  async verifyEmail(token: string): Promise<VerificationResponse> {
+    const response = await api.get<VerificationResponse>(
+      `/auth/verify-email?token=${token}`
+    );
+    return response.data;
+  }
+
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>(
+      "/auth/resend-verification",
+      { email }
+    );
     return response.data;
   }
 

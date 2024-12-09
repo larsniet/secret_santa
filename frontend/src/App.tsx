@@ -1,12 +1,8 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { AlertProvider } from "./contexts/AlertContext";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
+import { PublicRoute } from "./components/common/PublicRoute";
 import { LoginForm } from "./components/auth/LoginForm";
 import { RegisterForm } from "./components/auth/RegisterForm";
 import { Dashboard } from "./pages/Dashboard";
@@ -15,24 +11,18 @@ import { Home } from "./pages/Home";
 import { JoinSession } from "./pages/JoinSession";
 import { ParticipantPreferences } from "./pages/ParticipantPreferences";
 import { UserSettings } from "./pages/UserSettings";
+import { VerifyHandler } from "./components/auth/VerifyHandler";
 
 function App() {
   return (
-    <Router>
+    <AlertProvider>
       <AuthProvider>
-        <AlertProvider>
+        <BrowserRouter>
           <Routes>
-            {/* Public routes */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<LoginForm />} />
+            <Route path="/verify" element={<VerifyHandler />} />
             <Route path="/register" element={<RegisterForm />} />
-            <Route path="/join/:code" element={<JoinSession />} />
-            <Route
-              path="/session/:sessionId/participant/:participantId/preferences"
-              element={<ParticipantPreferences />}
-            />
-
-            {/* Protected routes */}
             <Route
               path="/dashboard"
               element={
@@ -42,28 +32,23 @@ function App() {
               }
             />
             <Route
-              path="/sessions/:id/*"
+              path="/sessions/:id"
               element={
                 <ProtectedRoute>
                   <SessionDetail />
                 </ProtectedRoute>
               }
             />
+            <Route path="/join/:code" element={<JoinSession />} />
             <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <UserSettings />
-                </ProtectedRoute>
-              }
+              path="/sessions/:sessionId/participants/:participantId/preferences"
+              element={<ParticipantPreferences />}
             />
-
-            {/* Catch-all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AlertProvider>
+        </BrowserRouter>
       </AuthProvider>
-    </Router>
+    </AlertProvider>
   );
 }
 

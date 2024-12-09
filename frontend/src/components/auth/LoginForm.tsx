@@ -1,18 +1,51 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import {
+  useNavigate,
+  Link,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAlert } from "../../contexts/AlertContext";
 import { Button } from "../common/Button";
+import { authService } from "../../services/auth.service";
 
 export const LoginForm: React.FC = () => {
-  const { login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, setupAuth } = useAuth();
   const { showAlert } = useAlert();
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (!token) return;
+
+    (async () => {
+      try {
+        const response = await authService.verifyEmail(token);
+        if (response.access_token && response.user) {
+          localStorage.setItem("token", response.access_token);
+          localStorage.setItem("user", JSON.stringify(response.user));
+          await setupAuth(response.access_token, response.user);
+          navigate("/dashboard", { replace: true });
+          setTimeout(() => {
+            showAlert("success", "Email verified successfully!");
+          }, 100);
+        }
+      } catch (err: any) {
+        showAlert(
+          "error",
+          err.response?.data?.message || "Failed to verify email"
+        );
+      }
+    })();
+  }, [searchParams, navigate, showAlert, setupAuth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +55,17 @@ export const LoginForm: React.FC = () => {
       await login(formData.email, formData.password);
       navigate("/dashboard");
     } catch (err: any) {
-      showAlert("error", err.response?.data?.message || "Failed to login");
+      if (
+        err.response?.status === 401 &&
+        err.response?.data?.message?.includes("verify your email")
+      ) {
+        showAlert(
+          "error",
+          "Please verify your email before logging in. Check your inbox for the verification link."
+        );
+      } else {
+        showAlert("error", err.response?.data?.message || "Failed to login");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -46,25 +89,22 @@ export const LoginForm: React.FC = () => {
             </span>
           </div>
         </Link>
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back!</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to manage your Secret Santa sessions
-          </p>
-        </div>
 
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-8">
+            <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
+              Sign in to your account
+            </h2>
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label
-                  htmlFor="email-address"
+                  htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
                 >
                   Email address
                 </label>
                 <input
-                  id="email-address"
+                  id="email"
                   name="email"
                   type="email"
                   autoComplete="email"
@@ -73,8 +113,7 @@ export const LoginForm: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
-                  placeholder="Enter your email"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
                 />
               </div>
 
@@ -95,13 +134,16 @@ export const LoginForm: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
-                  placeholder="Enter your password"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
                 />
               </div>
 
-              <Button type="submit" fullWidth isLoading={isLoading}>
-                Sign in
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex justify-center"
+              >
+                {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
           </div>
@@ -109,9 +151,12 @@ export const LoginForm: React.FC = () => {
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
             <p className="text-sm text-center text-gray-600">
               Don't have an account?{" "}
-              <Button variant="link" to="/register">
-                Create one now
-              </Button>
+              <Link
+                to="/register"
+                className="font-medium text-[#B91C1C] hover:text-[#991B1B]"
+              >
+                Sign up
+              </Link>
             </p>
           </div>
         </div>

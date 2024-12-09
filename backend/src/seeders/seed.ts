@@ -24,7 +24,18 @@ async function seed() {
   const user = await userModel.create({
     name: 'Santa',
     email: 'santa@plansecretsanta.com',
+    isEmailVerified: true,
     password: hashedPassword,
+  });
+
+  // Create unverified test user
+  const testUser = await userModel.create({
+    name: 'Test User',
+    email: 'test@test.com',
+    password: hashedPassword,
+    isEmailVerified: false,
+    emailVerificationToken: 'test-token',
+    emailVerificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
   });
 
   const userId = user._id.toString();

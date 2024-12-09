@@ -20,7 +20,6 @@ export const Dashboard: React.FC = () => {
     name: "",
     plan: EventPlan.FREE,
   });
-  const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
 
   useEffect(() => {
@@ -111,6 +110,13 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const sessionStats = {
+    total: sessions.length,
+    active: sessions.filter((s) => s.status === "active").length,
+    pending: sessions.filter((s) => s.status === "pending_payment").length,
+    completed: sessions.filter((s) => s.status === "completed").length,
+  };
+
   if (isLoading) {
     return (
       <Layout isLoading>
@@ -131,6 +137,46 @@ export const Dashboard: React.FC = () => {
               Create New Session
             </Button>
           )}
+        </div>
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm font-medium text-gray-500">
+              Total Sessions
+            </div>
+            <div className="mt-2 flex items-baseline">
+              <div className="text-2xl font-semibold text-gray-900">
+                {sessionStats.total}
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm font-medium text-green-500">Active</div>
+            <div className="mt-2 flex items-baseline">
+              <div className="text-2xl font-semibold text-gray-900">
+                {sessionStats.active}
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm font-medium text-yellow-500">
+              Pending Payment
+            </div>
+            <div className="mt-2 flex items-baseline">
+              <div className="text-2xl font-semibold text-gray-900">
+                {sessionStats.pending}
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="text-sm font-medium text-blue-500">Completed</div>
+            <div className="mt-2 flex items-baseline">
+              <div className="text-2xl font-semibold text-gray-900">
+                {sessionStats.completed}
+              </div>
+            </div>
+          </div>
         </div>
 
         {showCreateForm && (
@@ -307,106 +353,89 @@ export const Dashboard: React.FC = () => {
         )}
 
         {sessions.length === 0 ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-center py-12 bg-white rounded-lg shadow">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+              />
+            </svg>
+            <h3 className="mt-2 text-lg font-medium text-gray-900">
               No sessions yet
             </h3>
-            <p className="text-gray-500">
+            <p className="mt-1 text-sm text-gray-500">
               Create your first Secret Santa session to get started!
             </p>
+            <div className="mt-6">
+              <Button onClick={() => setShowCreateForm(true)}>
+                Create New Session
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sessions.map((session) => {
-              const planStyles = {
-                BUSINESS:
-                  "bg-gradient-to-br from-purple-50 to-white border-purple-200 hover:border-purple-300",
-                GROUP:
-                  "bg-gradient-to-br from-blue-50 to-white border-blue-200 hover:border-blue-300",
-                FREE: "bg-white border-gray-200 hover:border-gray-300",
-              }[session.plan as EventPlan];
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">
+                Recent Sessions
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {sessions.map((session) => {
+                const planStyles = {
+                  BUSINESS:
+                    "bg-gradient-to-br from-purple-50 to-white border-purple-200 hover:border-purple-300",
+                  GROUP:
+                    "bg-gradient-to-br from-blue-50 to-white border-blue-200 hover:border-blue-300",
+                  FREE: "bg-white border-gray-200 hover:border-gray-300",
+                }[session.plan as EventPlan];
 
-              return (
-                <Link
-                  key={session._id}
-                  to={`/sessions/${session._id}`}
-                  className="block transition-all duration-200"
-                >
-                  <div
-                    className={`h-full p-6 rounded-lg border ${planStyles} hover:shadow-md`}
+                return (
+                  <Link
+                    key={session._id}
+                    to={`/sessions/${session._id}`}
+                    className="block transition-all duration-200"
                   >
-                    <div className="flex flex-col h-full">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-1">
-                            {session.name}
-                          </h3>
-                          <div className="flex items-center gap-2 mb-3">
-                            <StatusBadge type="status" value={session.status} />
-                            <StatusBadge type="plan" value={session.plan} />
+                    <div
+                      className={`p-6 ${planStyles} hover:shadow-md transition-all duration-200`}
+                    >
+                      <div className="flex flex-col h-full">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">
+                              {session.name}
+                            </h3>
+                            <div className="flex items-center gap-2 mb-3">
+                              <StatusBadge
+                                type="status"
+                                value={session.status}
+                              />
+                              <StatusBadge type="plan" value={session.plan} />
+                            </div>
                           </div>
+                          <Button
+                            variant="danger"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setSessionToDelete(session);
+                            }}
+                            isLoading={isSubmitting}
+                          >
+                            Delete
+                          </Button>
                         </div>
-                        <Button
-                          variant="danger"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setSessionToDelete(session);
-                          }}
-                          isLoading={isSubmitting}
-                        >
-                          Delete
-                        </Button>
-                      </div>
 
-                      <div className="flex flex-col gap-2 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            className="w-5 h-5 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          <span>
-                            {session.participants?.length || 0} participants
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <svg
-                            className="w-5 h-5 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                          </svg>
-                          <span>
-                            Created{" "}
-                            {new Date(session.createdAt).toLocaleDateString(
-                              "en-GB",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                              }
-                            )}
-                          </span>
-                        </div>
-                        {session.status === "pending_payment" && (
-                          <div className="flex items-center gap-2 text-yellow-600">
+                        <div className="flex flex-col gap-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
                             <svg
-                              className="w-5 h-5"
+                              className="w-5 h-5 text-gray-400"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -415,18 +444,64 @@ export const Dashboard: React.FC = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                               />
                             </svg>
-                            <span>Payment required to activate</span>
+                            <span>
+                              {session.participants?.length || 0} participants
+                            </span>
                           </div>
-                        )}
+                          <div className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <span>
+                              Created{" "}
+                              {new Date(session.createdAt).toLocaleDateString(
+                                "en-GB",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                }
+                              )}
+                            </span>
+                          </div>
+                          {session.status === "pending_payment" && (
+                            <div className="flex items-center gap-2 text-yellow-600">
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <span>Payment required to activate</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         )}
 
