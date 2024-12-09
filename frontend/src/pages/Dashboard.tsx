@@ -129,12 +129,21 @@ export const Dashboard: React.FC = () => {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
           <h1 className="text-3xl font-bold text-gray-900">
             My Secret Santa Sessions
           </h1>
           {!showCreateForm && (
-            <Button onClick={() => setShowCreateForm(true)}>
+            <Button
+              onClick={() => {
+                setShowCreateForm(true);
+                setTimeout(() => {
+                  document
+                    .querySelector(".create-form")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }, 100);
+              }}
+            >
               Create New Session
             </Button>
           )}
@@ -181,7 +190,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {showCreateForm && (
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div className="bg-white p-6 rounded-lg shadow create-form">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
                 Create New Session
@@ -231,6 +240,7 @@ export const Dashboard: React.FC = () => {
                     required
                     maxLength={50}
                     disabled={isSubmitting}
+                    autoFocus
                   />
                   <span className="absolute right-3 top-2 text-sm text-gray-400">
                     {formData.name.length}/50
