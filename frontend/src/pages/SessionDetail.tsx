@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
+import { BackButton } from "../components/common/BackButton";
 import { sessionService, Session } from "../services/session.service";
 import {
   participantService,
@@ -265,6 +266,7 @@ export const SessionDetail: React.FC = () => {
 
   return (
     <Layout>
+      <BackButton />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

@@ -4,38 +4,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAlert } from "../../contexts/AlertContext";
 import { Button } from "../common/Button";
 
-const PLANS = [
-  {
-    name: "FREE",
-    price: "$0/month",
-    features: [
-      "Create 1 Secret Santa session",
-      "Basic email notifications",
-      "Up to 5 participants",
-    ],
-  },
-  {
-    name: "GROUP",
-    price: "$4.99/month",
-    features: [
-      "Create 5 Secret Santa sessions",
-      "Custom email templates",
-      "Up to 25 participants",
-      "Gift preferences",
-    ],
-  },
-  {
-    name: "BUSINESS",
-    price: "$9.99/month",
-    features: [
-      "Unlimited Secret Santa sessions",
-      "Priority support",
-      "Unlimited participants",
-      "Advanced features",
-    ],
-  },
-];
-
 export const RegisterForm: React.FC = () => {
   const { register } = useAuth();
   const { showAlert } = useAlert();
@@ -44,7 +12,6 @@ export const RegisterForm: React.FC = () => {
     name: "",
     email: "",
     password: "",
-    plan: "FREE",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,12 +20,7 @@ export const RegisterForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await register(
-        formData.name,
-        formData.email,
-        formData.password,
-        formData.plan
-      );
+      await register(formData.name, formData.email, formData.password);
       navigate("/dashboard");
     } catch (err: any) {
       if (
@@ -79,7 +41,7 @@ export const RegisterForm: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl w-full">
+      <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <Link to="/" className="block text-center mb-8">
             <div className="inline-flex items-center justify-center">
@@ -169,77 +131,6 @@ export const RegisterForm: React.FC = () => {
                     className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
                     placeholder="Create a password"
                   />
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Choose your plan
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {PLANS.map((plan) => (
-                    <div
-                      key={plan.name}
-                      className={`relative rounded-lg border ${
-                        formData.plan === plan.name
-                          ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
-                          : "border-gray-300"
-                      } bg-white p-6 shadow-sm hover:border-[#B91C1C] focus:outline-none cursor-pointer`}
-                      onClick={() =>
-                        setFormData({ ...formData, plan: plan.name })
-                      }
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-medium text-gray-900">
-                            {plan.name}
-                          </h3>
-                          <p className="mt-1 text-sm text-gray-500">
-                            {plan.price}
-                          </p>
-                        </div>
-                        <div
-                          className={`h-5 w-5 rounded-full border ${
-                            formData.plan === plan.name
-                              ? "border-[#B91C1C] bg-[#B91C1C]"
-                              : "border-gray-300 bg-white"
-                          } flex items-center justify-center`}
-                        >
-                          {formData.plan === plan.name && (
-                            <svg
-                              className="h-3 w-3 text-white"
-                              fill="currentColor"
-                              viewBox="0 0 12 12"
-                            >
-                              <path d="M3.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L5 6.586 3.707 5.293z" />
-                            </svg>
-                          )}
-                        </div>
-                      </div>
-                      <ul className="mt-4 space-y-2">
-                        {plan.features.map((feature) => (
-                          <li key={feature} className="flex items-start">
-                            <svg
-                              className="h-5 w-5 text-green-500 mr-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                            <span className="text-sm text-gray-500">
-                              {feature}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
                 </div>
               </div>
 
