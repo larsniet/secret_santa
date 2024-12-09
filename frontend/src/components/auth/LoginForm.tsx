@@ -1,28 +1,28 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAlert } from "../../contexts/AlertContext";
 import { Button } from "../common/Button";
 
 export const LoginForm: React.FC = () => {
   const { login } = useAuth();
+  const { showAlert } = useAlert();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
 
     try {
       await login(formData.email, formData.password);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to login");
+      showAlert("error", err.response?.data?.message || "Failed to login");
     } finally {
       setIsLoading(false);
     }
@@ -55,12 +55,6 @@ export const LoginForm: React.FC = () => {
 
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-8">
-            {error && (
-              <div className="mb-4 rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
-              </div>
-            )}
-
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label

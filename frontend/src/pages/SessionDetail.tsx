@@ -7,18 +7,18 @@ import {
   participantService,
   Participant,
 } from "../services/participant.service";
+import { useAlert } from "../contexts/AlertContext";
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [session, setSession] = useState<Session | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [newParticipant, setNewParticipant] = useState({
     name: "",
     email: "",
   });
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
@@ -50,7 +50,10 @@ export const SessionDetail: React.FC = () => {
       setParticipants(participantsData);
     } catch (err: any) {
       console.error("Error loading session:", err);
-      setError(err.response?.data?.message || "Failed to load session details");
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to load session details"
+      );
       // Only navigate away if the session doesn't exist or user is unauthorized
       if (err.response?.status === 404 || err.response?.status === 401) {
         navigate("/dashboard");
@@ -70,17 +73,18 @@ export const SessionDetail: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      setError("");
       const participant = await participantService.addParticipant(session._id, {
         name: newParticipant.name,
         email: newParticipant.email,
       });
       setParticipants([...participants, participant]);
       setNewParticipant({ name: "", email: "" });
-      setSuccessMessage("Participant added successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      showAlert("success", "Participant added successfully!");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to add participant");
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to add participant"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -91,17 +95,16 @@ export const SessionDetail: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      setError("");
       await participantService.createAssignments(session._id);
       const updatedSession = await sessionService.updateSessionStatus(
         session._id,
         "completed"
       );
       setSession(updatedSession);
-      setSuccessMessage("Secret Santa assignments have been sent!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      showAlert("success", "Secret Santa assignments have been sent!");
     } catch (err: any) {
-      setError(
+      showAlert(
+        "error",
         err.response?.data?.message ||
           "Failed to create Secret Santa assignments"
       );
@@ -121,10 +124,12 @@ export const SessionDetail: React.FC = () => {
       setIsSubmitting(true);
       await participantService.deleteParticipant(session._id, participantId);
       setParticipants(participants.filter((p) => p._id !== participantId));
-      setSuccessMessage("Participant removed successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      showAlert("success", "Participant removed successfully!");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to remove participant");
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to remove participant"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -179,10 +184,12 @@ export const SessionDetail: React.FC = () => {
         )
       );
       setEditingPreferences(null);
-      setSuccessMessage("Preferences updated successfully!");
-      setTimeout(() => setSuccessMessage(""), 3000);
+      showAlert("success", "Preferences updated successfully!");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update preferences");
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to update preferences"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -196,6 +203,49 @@ export const SessionDetail: React.FC = () => {
       wishlist: participant.preferences?.wishlist || "",
       restrictions: participant.preferences?.restrictions || "",
     });
+  };
+
+  const handleDelete = async () => {
+    if (
+      !session ||
+      !window.confirm("Are you sure you want to delete this session?")
+    )
+      return;
+
+    try {
+      setIsSubmitting(true);
+      await sessionService.deleteSession(session._id);
+      showAlert("success", "Session deleted successfully");
+      navigate("/dashboard");
+    } catch (err: any) {
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to delete session"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: Session["status"]) => {
+    if (!session) return;
+
+    try {
+      setIsSubmitting(true);
+      const updatedSession = await sessionService.updateSessionStatus(
+        session._id,
+        newStatus
+      );
+      setSession(updatedSession);
+      showAlert("success", `Session status updated to ${newStatus}`);
+    } catch (err: any) {
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to update session status"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading || !session) {
@@ -221,30 +271,57 @@ export const SessionDetail: React.FC = () => {
               Created on {new Date(session.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <div>
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                session.status === "active"
-                  ? "bg-green-100 text-green-800"
-                  : session.status === "completed"
-                  ? "bg-[#FEE2E2] text-[#B91C1C]"
-                  : "bg-gray-100 text-gray-800"
-              }`}
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <select
+                value={session.status}
+                onChange={(e) =>
+                  handleStatusChange(e.target.value as Session["status"])
+                }
+                className={`appearance-none pl-3 pr-10 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B91C1C] ${
+                  session.status === "active"
+                    ? "bg-green-50 text-green-700 border-green-200"
+                    : session.status === "completed"
+                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                    : "bg-gray-50 text-gray-700 border-gray-200"
+                }`}
+                disabled={isSubmitting}
+              >
+                <option value="active" className="bg-green-50 text-green-700">
+                  Active
+                </option>
+                <option value="completed" className="bg-blue-50 text-blue-700">
+                  Completed
+                </option>
+                <option value="archived" className="bg-gray-50 text-gray-700">
+                  Archived
+                </option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <Button
+              variant="danger"
+              onClick={handleDelete}
+              isLoading={isSubmitting}
             >
-              {session.status}
-            </span>
+              Delete Session
+            </Button>
           </div>
         </div>
-
-        {(error || successMessage) && (
-          <div
-            className={`p-4 ${
-              error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
-            } rounded-md`}
-          >
-            {error || successMessage}
-          </div>
-        )}
 
         <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
           <h2 className="text-lg font-medium text-gray-900 mb-2">

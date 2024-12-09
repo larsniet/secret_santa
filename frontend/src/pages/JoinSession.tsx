@@ -1,20 +1,20 @@
-import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
+import { Button } from "../components/common/Button";
+import { useAlert } from "../contexts/AlertContext";
 import { sessionService } from "../services/session.service";
 import { participantService } from "../services/participant.service";
-import { Button } from "../components/common/Button";
-
-type Step = "join" | "preferences" | "success";
 
 export const JoinSession: React.FC = () => {
   const { code } = useParams<{ code: string }>();
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState<Step>("join");
+  const { showAlert } = useAlert();
   const [session, setSession] = useState<any>(null);
   const [participant, setParticipant] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState<
+    "join" | "preferences" | "success"
+  >("join");
   const [joinData, setJoinData] = useState({
     name: "",
     email: "",
@@ -26,35 +26,39 @@ export const JoinSession: React.FC = () => {
     restrictions: "",
   });
 
+  useEffect(() => {
+    loadSession();
+  }, [code]);
+
+  const loadSession = async () => {
+    if (!code) return;
+    try {
+      const data = await sessionService.getSession(code);
+      setSession(data);
+    } catch (err: any) {
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to load session"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code) return;
+    if (!session) return;
 
     try {
       setIsLoading(true);
-      setError("");
-
-      // First, get the session
-      const sessionData = await sessionService.getSessionByInviteCode(code);
-
-      if (sessionData.status !== "active") {
-        setError(
-          "This Secret Santa session is no longer accepting new participants."
-        );
-        return;
-      }
-
-      setSession(sessionData);
-
-      // Then add the participant
-      const newParticipant = await participantService.addParticipant(
-        sessionData._id,
-        joinData
-      );
-      setParticipant(newParticipant);
+      const data = await participantService.joinSession(session._id, joinData);
+      setParticipant(data);
       setCurrentStep("preferences");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to join session");
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to join session"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +77,10 @@ export const JoinSession: React.FC = () => {
       );
       setCurrentStep("success");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to save preferences");
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to save preferences"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -277,12 +284,6 @@ export const JoinSession: React.FC = () => {
                     : "Help your Secret Santa choose the perfect gift by sharing your preferences."}
                 </p>
               </div>
-
-              {error && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                  <p className="text-sm text-red-600">{error}</p>
-                </div>
-              )}
 
               {currentStep === "join" && renderJoinStep()}
               {currentStep === "preferences" && renderPreferencesStep()}

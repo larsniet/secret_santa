@@ -2,13 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
 import { userService } from "../services/user.service";
-import { loadStripe } from "@stripe/stripe-js";
-
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || "");
 
 export const UserSettings: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
-  const [subscription, setSubscription] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -25,9 +20,6 @@ export const UserSettings: React.FC = () => {
       try {
         setIsLoading(true);
         const userData = await userService.getCurrentUser();
-        const subscriptionData = await userService.getCurrentSubscription();
-        setUser(userData);
-        setSubscription(subscriptionData);
         setFormData((prevData) => ({
           ...prevData,
           name: userData.name,
@@ -82,35 +74,6 @@ export const UserSettings: React.FC = () => {
       setTimeout(() => setSuccess(""), 3000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to update password");
-    }
-  };
-
-  const handleSubscribe = async (planName: string) => {
-    try {
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe failed to load");
-
-      const session = await userService.createCheckoutSession(planName);
-      await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
-    } catch (err: any) {
-      setError(err.message || "Failed to initiate checkout");
-    }
-  };
-
-  const handleCancelSubscription = async () => {
-    if (!window.confirm("Are you sure you want to cancel your subscription?")) {
-      return;
-    }
-    try {
-      await userService.cancelSubscription();
-      setSuccess("Subscription cancelled successfully!");
-      const subscriptionData = await userService.getCurrentSubscription();
-      setSubscription(subscriptionData);
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to cancel subscription");
     }
   };
 
@@ -249,137 +212,6 @@ export const UserSettings: React.FC = () => {
             </div>
             <Button type="submit">Update Password</Button>
           </form>
-        </div>
-
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Subscription
-            </h2>
-          </div>
-          <div className="p-6">
-            {subscription ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Current Plan: {subscription.planName}
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Status: {subscription.status}
-                  </p>
-                  {subscription.currentPeriodEnd && (
-                    <p className="mt-1 text-sm text-gray-500">
-                      Next billing date:{" "}
-                      {new Date(
-                        subscription.currentPeriodEnd
-                      ).toLocaleDateString()}
-                    </p>
-                  )}
-                </div>
-                {subscription.status === "active" && (
-                  <Button variant="danger" onClick={handleCancelSubscription}>
-                    Cancel Subscription
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {[
-                  {
-                    name: "Free",
-                    price: "€0",
-                    features: [
-                      "Up to 15 participants",
-                      "Basic matching algorithm",
-                      "Email notifications",
-                      "Gift preferences & wishlists",
-                      "1 active event",
-                    ],
-                  },
-                  {
-                    name: "Group",
-                    price: "€4",
-                    features: [
-                      "Up to 50 participants",
-                      "Smart matching algorithm",
-                      "Custom event themes",
-                      "Gift preferences & wishlists",
-                      "Budget setting",
-                      "3 active events",
-                    ],
-                    popular: true,
-                  },
-                  {
-                    name: "Business",
-                    price: "€10",
-                    features: [
-                      "Unlimited participants",
-                      "Advanced matching algorithm",
-                      "Custom branding",
-                      "Gift preferences & wishlists",
-                      "Budget management",
-                      "10 active events",
-                      "Priority support",
-                    ],
-                  },
-                ].map((plan) => (
-                  <div
-                    key={plan.name}
-                    className={`relative bg-white p-6 rounded-lg shadow-sm border ${
-                      plan.popular
-                        ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
-                        : "border-gray-200"
-                    }`}
-                  >
-                    {plan.popular && (
-                      <div className="absolute top-0 right-0 -translate-y-1/2 px-3 py-1 bg-[#B91C1C] text-white text-sm font-medium rounded-full">
-                        Popular
-                      </div>
-                    )}
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {plan.name}
-                    </h3>
-                    <p className="mt-2 text-2xl font-bold text-gray-900">
-                      {plan.price}
-                      <span className="text-base font-medium text-gray-500">
-                        {plan.name !== "Free" ? "/event" : ""}
-                      </span>
-                    </p>
-                    <ul className="mt-4 space-y-2">
-                      {plan.features.map((feature) => (
-                        <li key={feature} className="flex items-center">
-                          <svg
-                            className="h-5 w-5 text-[#B91C1C]"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          <span className="ml-2 text-sm text-gray-500">
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    {plan.name !== "Free" && (
-                      <Button
-                        className="mt-6 w-full"
-                        onClick={() => handleSubscribe(plan.name)}
-                      >
-                        Subscribe
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="bg-white shadow rounded-lg">

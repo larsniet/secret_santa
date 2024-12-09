@@ -4,7 +4,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/user.schema';
-import { SubscriptionPlan } from '../users/user.schema';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +15,8 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userModel.findOne({ email });
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user.toObject();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _pass, ...result } = user.toObject();
       return result;
     }
     return null;
@@ -45,13 +45,12 @@ export class AuthService {
       email,
       password: hashedPassword,
       name,
-      subscriptionPlan: SubscriptionPlan.FREE,
-      subscriptionExpiresAt: null,
     });
 
     await user.save();
 
-    const { password: _, ...result } = user.toObject();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _pass, ...result } = user.toObject();
     return this.login(result);
   }
 }

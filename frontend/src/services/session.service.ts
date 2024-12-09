@@ -1,27 +1,30 @@
 import { api } from "./api";
+import { EventPlan } from "../types/plans";
 
 export interface Session {
   _id: string;
   name: string;
+  creator: string;
+  participants: string[];
   inviteCode: string;
-  status: "active" | "completed" | "archived";
-  creator: {
-    _id: string;
-    name: string;
-    email: string;
-  };
+  status: "pending_payment" | "active" | "completed" | "archived";
+  plan: EventPlan;
   createdAt: string;
   completedAt?: string;
+  paymentId?: string;
 }
 
 class SessionService {
-  async createSession(name: string): Promise<Session> {
-    const response = await api.post<Session>("/sessions", { name });
+  async getMySessions(): Promise<Session[]> {
+    const response = await api.get<Session[]>("/sessions/my");
     return response.data;
   }
 
-  async getUserSessions(): Promise<Session[]> {
-    const response = await api.get<Session[]>("/sessions/my-sessions");
+  async createSession(data: {
+    name: string;
+    plan: EventPlan;
+  }): Promise<Session> {
+    const response = await api.post<Session>("/sessions", data);
     return response.data;
   }
 
@@ -36,17 +39,24 @@ class SessionService {
   }
 
   async updateSessionStatus(
-    sessionId: string,
+    id: string,
     status: Session["status"]
   ): Promise<Session> {
-    const response = await api.patch<Session>(`/sessions/${sessionId}/status`, {
+    const response = await api.patch<Session>(`/sessions/${id}/status`, {
       status,
     });
     return response.data;
   }
 
-  async deleteSession(sessionId: string): Promise<void> {
-    await api.delete(`/sessions/${sessionId}`);
+  async createCheckoutSession(sessionId: string): Promise<{ id: string }> {
+    const response = await api.post<{ id: string }>(
+      `/sessions/${sessionId}/checkout`
+    );
+    return response.data;
+  }
+
+  async deleteSession(id: string): Promise<void> {
+    await api.delete(`/sessions/${id}`);
   }
 }
 

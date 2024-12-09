@@ -3,9 +3,11 @@ import { AppModule } from '../app.module';
 import { Model, Types } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
-import { User, SubscriptionPlan } from '../users/user.schema';
+import { User } from '../users/user.schema';
+import { EventPlan } from '../users/user.schema';
 import { Participant } from '../participants/participant.schema';
 import { SessionsService } from '../sessions/sessions.service';
+import { Session } from '../sessions/session.schema';
 
 async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -15,6 +17,7 @@ async function seed() {
     getModelToken(Participant.name),
   );
   const sessionsService = app.get(SessionsService);
+  const sessionModel = app.get<Model<Session>>(getModelToken(Session.name));
 
   // Create user
   const hashedPassword = await bcrypt.hash('thisisnotapassword', 10);
@@ -22,18 +25,17 @@ async function seed() {
     name: 'Santa',
     email: 'santa@plansecretsanta.com',
     password: hashedPassword,
-    subscriptionPlan: SubscriptionPlan.FREE,
-    subscriptionExpiresAt: null,
+    plan: EventPlan.FREE,
   });
 
   const userId = user._id.toString();
 
   // Create session using the service
-  const session = await sessionsService.createSession(
-    userId,
-    'Family Christmas 2023',
-  );
-  const sessionId = (session as any)._id.toString();
+  const session = (await sessionsService.createSession(userId, {
+    name: 'Family Christmas 2023',
+    plan: EventPlan.FREE,
+  })) as Session & { _id: Types.ObjectId };
+  const sessionId = session._id.toString();
 
   // Create first participant (the creator)
   const firstParticipant = await participantModel.create({
@@ -90,10 +92,22 @@ async function seed() {
   );
 
   // Add all participants to the session
-  await sessionsService.updateSessionParticipants(sessionId, [
-    firstParticipant._id,
-    ...createdParticipants.map((p) => p._id),
-  ]);
+  await sessionModel.updateOne(
+    { _id: session._id },
+    {
+      $set: {
+        participants: [
+          firstParticipant._id,
+          ...createdParticipants.map((p) => p._id),
+        ],
+      },
+    },
+  );
+
+  await participantModel.updateMany(
+    { session: new Types.ObjectId(sessionId) },
+    { $set: { isActive: true } },
+  );
 
   console.log('Seeding completed!');
   console.log('User created:', user.email);

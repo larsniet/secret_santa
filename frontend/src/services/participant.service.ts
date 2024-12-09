@@ -78,6 +78,34 @@ class ParticipantService {
     );
     return response.data;
   }
+
+  async joinSession(
+    sessionId: string,
+    data: { name: string; email: string }
+  ): Promise<Participant> {
+    const response = await api.post<Participant>(
+      `/sessions/${sessionId}/participants`,
+      data
+    );
+    return response.data;
+  }
+
+  async getPreferences(
+    sessionId: string,
+    participantId: string
+  ): Promise<Participant["preferences"]> {
+    const response = await api.get<Participant>(
+      `/sessions/${sessionId}/participants/${participantId}`
+    );
+    return (
+      response.data.preferences || {
+        interests: "",
+        sizes: "",
+        wishlist: "",
+        restrictions: "",
+      }
+    );
+  }
 }
 
 export const participantService = new ParticipantService();

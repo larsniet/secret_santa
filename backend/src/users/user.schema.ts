@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-export enum SubscriptionPlan {
-  FREE = 'Free',
-  GROUP = 'Group',
-  BUSINESS = 'Business',
+export enum EventPlan {
+  FREE = 'FREE',
+  GROUP = 'GROUP',
+  BUSINESS = 'BUSINESS',
 }
 
 @Schema()
@@ -18,16 +18,6 @@ export class User extends Document {
   @Prop({ required: true })
   name: string;
 
-  @Prop({
-    type: String,
-    enum: SubscriptionPlan,
-    default: SubscriptionPlan.FREE,
-  })
-  subscriptionPlan: SubscriptionPlan;
-
-  @Prop()
-  subscriptionExpiresAt?: Date;
-
   @Prop({ default: Date.now })
   createdAt: Date;
 }
@@ -35,30 +25,38 @@ export class User extends Document {
 export const UserSchema = SchemaFactory.createForClass(User);
 
 export const PLAN_LIMITS = {
-  [SubscriptionPlan.FREE]: {
+  [EventPlan.FREE]: {
     maxParticipants: 15,
-    maxActiveEvents: 1,
-    features: ['basic_matching', 'email_notifications', 'preferences'],
-  },
-  [SubscriptionPlan.GROUP]: {
-    maxParticipants: 50,
-    maxActiveEvents: 3,
+    price: 0,
     features: [
-      'smart_matching',
-      'custom_themes',
-      'preferences',
-      'budget_setting',
+      'Basic matching algorithm',
+      'Email notifications',
+      'Gift preferences & wishlists',
+      'Up to 10 participants',
+      '1 event at a time',
     ],
   },
-  [SubscriptionPlan.BUSINESS]: {
-    maxParticipants: Infinity,
-    maxActiveEvents: 10,
+  [EventPlan.GROUP]: {
+    maxParticipants: 50,
+    price: 4,
     features: [
-      'advanced_matching',
-      'custom_branding',
-      'preferences',
-      'budget_management',
-      'priority_support',
+      'Smart matching algorithm',
+      'Custom event themes',
+      'Gift preferences & wishlists',
+      'Up to 50 participants',
+      'Budget setting',
+    ],
+  },
+  [EventPlan.BUSINESS]: {
+    maxParticipants: Infinity,
+    price: 10,
+    features: [
+      'Advanced matching algorithm',
+      'Custom branding',
+      'Gift preferences & wishlists',
+      'Unlimited participants',
+      'Budget management',
+      'Priority support',
     ],
   },
 };

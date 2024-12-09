@@ -5,6 +5,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
+import { AlertProvider } from "./contexts/AlertContext";
 import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import { LoginForm } from "./components/auth/LoginForm";
 import { RegisterForm } from "./components/auth/RegisterForm";
@@ -19,46 +20,48 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/register" element={<RegisterForm />} />
-          <Route path="/join/:code" element={<JoinSession />} />
-          <Route
-            path="/session/:sessionId/participant/:participantId/preferences"
-            element={<ParticipantPreferences />}
-          />
+        <AlertProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/register" element={<RegisterForm />} />
+            <Route path="/join/:code" element={<JoinSession />} />
+            <Route
+              path="/session/:sessionId/participant/:participantId/preferences"
+              element={<ParticipantPreferences />}
+            />
 
-          {/* Protected routes */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/sessions/:id/*"
-            element={
-              <ProtectedRoute>
-                <SessionDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <UserSettings />
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sessions/:id/*"
+              element={
+                <ProtectedRoute>
+                  <SessionDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <UserSettings />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Catch-all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Catch-all route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AlertProvider>
       </AuthProvider>
     </Router>
   );

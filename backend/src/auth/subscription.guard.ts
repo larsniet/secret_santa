@@ -5,11 +5,11 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { PLAN_LIMITS, SubscriptionPlan } from '../users/user.schema';
 import { SessionsService } from '../sessions/sessions.service';
+import { PLAN_LIMITS, EventPlan } from '../users/user.schema';
 
 @Injectable()
-export class SubscriptionGuard implements CanActivate {
+export class EventLimitGuard implements CanActivate {
   constructor(
     private usersService: UsersService,
     private sessionsService: SessionsService,
@@ -20,33 +20,22 @@ export class SubscriptionGuard implements CanActivate {
     const userId = request.user?.userId;
     if (!userId) return false;
 
-    const user = await this.usersService.findById(userId);
-    const userPlan = PLAN_LIMITS[user.subscriptionPlan];
-
-    // Check if subscription has expired
-    if (
-      user.subscriptionPlan !== SubscriptionPlan.FREE &&
-      user.subscriptionExpiresAt &&
-      user.subscriptionExpiresAt < new Date()
-    ) {
-      // Revert to free plan if subscription expired
-      await this.usersService.updateSubscription(userId, SubscriptionPlan.FREE);
-      throw new ForbiddenException('Subscription has expired');
-    }
-
-    // Check active events limit
+    // Get active sessions count
     const activeEvents =
       await this.sessionsService.getActiveSessionCount(userId);
-    if (activeEvents >= userPlan.maxActiveEvents) {
+    const freeLimit = PLAN_LIMITS[EventPlan.FREE].maxParticipants;
+
+    // If creating/updating a session, check participants limit
+    if (request.body?.participants?.length > freeLimit) {
       throw new ForbiddenException(
-        `Your plan allows a maximum of ${userPlan.maxActiveEvents} active events`,
+        `Free plan allows a maximum of ${freeLimit} participants. Please upgrade your session to a paid plan.`,
       );
     }
 
-    // If creating/updating a session, check participants limit
-    if (request.body?.participants?.length > userPlan.maxParticipants) {
+    // Check active events limit for free plan (1 active event)
+    if (activeEvents >= 1) {
       throw new ForbiddenException(
-        `Your plan allows a maximum of ${userPlan.maxParticipants} participants`,
+        'Free plan allows only 1 active event. Please upgrade to a paid plan for more events.',
       );
     }
 

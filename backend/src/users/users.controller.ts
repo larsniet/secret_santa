@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UsersService } from './users.service';
-import { PLAN_LIMITS } from './user.schema';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -46,20 +45,6 @@ export class UsersController {
       passwordData.newPassword,
     );
     return { message: 'Password updated successfully' };
-  }
-
-  @Get('me/subscription')
-  async getSubscription(@Request() req) {
-    const { plan, expiresAt } = await this.usersService.getSubscriptionDetails(
-      req.user.userId,
-    );
-    return {
-      planName: plan,
-      features: PLAN_LIMITS[plan].features,
-      maxParticipants: PLAN_LIMITS[plan].maxParticipants,
-      maxActiveEvents: PLAN_LIMITS[plan].maxActiveEvents,
-      expiresAt,
-    };
   }
 
   @Delete('me')

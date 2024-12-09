@@ -1,14 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, SubscriptionPlan } from './user.schema';
+import { User } from './user.schema';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User.name)
-    private userModel: Model<User>,
+    @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel('Session') private sessionModel: Model<any>,
     @InjectModel('Participant') private participantModel: Model<any>,
   ) {}
@@ -23,24 +22,11 @@ export class UsersService {
 
   async updateProfile(
     userId: string,
-    updateData: { name?: string; email?: string },
+    data: { name?: string; email?: string },
   ): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    // If email is being updated, check if it's already in use
-    if (updateData.email && updateData.email !== user.email) {
-      const existingUser = await this.userModel
-        .findOne({ email: updateData.email })
-        .exec();
-      if (existingUser) {
-        throw new UnauthorizedException('Email already in use');
-      }
-    }
-
-    Object.assign(user, updateData);
+    const user = await this.findById(userId);
+    if (data.name) user.name = data.name;
+    if (data.email) user.email = data.email;
     return user.save();
   }
 
@@ -49,23 +35,12 @@ export class UsersService {
     currentPassword: string,
     newPassword: string,
   ): Promise<void> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    // Verify current password
-    const isPasswordValid = await bcrypt.compare(
-      currentPassword,
-      user.password,
-    );
-    if (!isPasswordValid) {
+    const user = await this.findById(userId);
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
-
-    // Hash and update new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
+    user.password = await bcrypt.hash(newPassword, 10);
     await user.save();
   }
 
@@ -74,32 +49,6 @@ export class UsersService {
     const userObject = user.toObject();
     delete userObject.password;
     return userObject;
-  }
-
-  async updateSubscription(
-    userId: string,
-    plan: SubscriptionPlan,
-    expiresAt?: Date,
-  ): Promise<User> {
-    const user = await this.userModel.findById(userId).exec();
-    if (!user) {
-      throw new UnauthorizedException('Invalid or expired token');
-    }
-
-    user.subscriptionPlan = plan;
-    user.subscriptionExpiresAt = expiresAt;
-    return user.save();
-  }
-
-  async getSubscriptionDetails(userId: string): Promise<{
-    plan: SubscriptionPlan;
-    expiresAt?: Date;
-  }> {
-    const user = await this.findById(userId);
-    return {
-      plan: user.subscriptionPlan,
-      expiresAt: user.subscriptionExpiresAt,
-    };
   }
 
   async deleteAccount(userId: string): Promise<void> {
