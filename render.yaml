@@ -6,6 +6,8 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         sync: false
+      - key: REACT_APP_STRIPE_PUBLIC_KEY
+        sync: false
     buildCommand: pnpm i && pnpm build
     staticPublishPath: build
     headers:
@@ -42,10 +44,16 @@ services:
         sync: false
       - key: SMTP_HOST
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
     region: oregon
-    buildCommand: pnpm i && pnpm build
-    startCommand: pnpm start:prod
+    buildCommand: cd backend && pnpm i && pnpm build
+    startCommand: cd backend && pnpm i --prod && node dist/main
     domains:
       - elves.plansecretsanta.com
-    rootDir: backend
+    rootDir: .
 version: "1"
