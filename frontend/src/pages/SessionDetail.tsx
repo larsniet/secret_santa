@@ -292,7 +292,20 @@ export const SessionDetail: React.FC = () => {
             >
               {session.status
                 .replace(/_/g, " ")
-                .replace(/\b\w/g, (char) => char.toUpperCase())}
+                .replace(/\b\w/g, (char) => char.toUpperCase())}{" "}
+            </span>
+            <span
+              className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center border ${
+                {
+                  BUSINESS: "bg-purple-50 text-purple-800 border-purple-200",
+                  GROUP: "bg-blue-50 text-blue-800 border-blue-200",
+                  FREE: "bg-gray-50 text-gray-800 border-gray-200",
+                }[session.plan as EventPlan]
+              }`}
+            >
+              {session.plan.charAt(0).toUpperCase() +
+                session.plan.toLowerCase().slice(1)}{" "}
+              Plan
             </span>
             <Button
               variant="danger"
