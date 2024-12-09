@@ -251,7 +251,12 @@ export const SessionDetail: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{session.name}</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Created on {new Date(session.createdAt).toLocaleDateString()}
+              Created on{" "}
+              {new Date(session.createdAt).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })}
             </p>
           </div>
           <div className="flex items-center gap-3">
