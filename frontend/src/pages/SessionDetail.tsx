@@ -293,24 +293,32 @@ export const SessionDetail: React.FC = () => {
           <div>
             {isEditingName ? (
               <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  className="text-3xl font-bold text-gray-900 border-b border-gray-300 focus:border-[#B91C1C] focus:outline-none bg-transparent"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleNameSave();
-                    } else if (e.key === "Escape") {
-                      setIsEditingName(false);
-                    }
-                  }}
-                />
+                <div className="relative w-full">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value.slice(0, 50))}
+                    className="text-3xl font-bold text-gray-900 border-b border-gray-300 focus:border-[#B91C1C] focus:outline-none bg-transparent w-full pr-16"
+                    autoFocus
+                    maxLength={50}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleNameSave();
+                      } else if (e.key === "Escape") {
+                        setIsEditingName(false);
+                      }
+                    }}
+                  />
+                  <span className="absolute right-0 bottom-2 text-sm text-gray-400">
+                    {editedName.length}/50
+                  </span>
+                </div>
                 <button
                   onClick={handleNameSave}
-                  disabled={isSubmitting}
-                  className="text-green-600 hover:text-green-700"
+                  disabled={
+                    isSubmitting || !editedName.trim() || editedName.length > 50
+                  }
+                  className="text-green-600 hover:text-green-700 disabled:opacity-50"
                 >
                   <svg
                     className="w-5 h-5"

@@ -19,8 +19,19 @@ export class SessionsService {
     userId: string,
     data: { name: string; plan: EventPlan },
   ): Promise<Session> {
+    const trimmedName = data.name.trim();
+    if (!trimmedName) {
+      throw new BadRequestException('Session name cannot be empty');
+    }
+
+    if (trimmedName.length > 50) {
+      throw new BadRequestException(
+        'Session name cannot be longer than 50 characters',
+      );
+    }
+
     const session = new this.sessionModel({
-      name: data.name,
+      name: trimmedName,
       creator: userId,
       plan: data.plan,
       status:
@@ -134,16 +145,19 @@ export class SessionsService {
       throw new UnauthorizedException('Not authorized to update this session');
     }
 
-    if (!updateData.name || !updateData.name.trim()) {
+    const trimmedName = updateData.name.trim();
+    if (!trimmedName) {
       throw new BadRequestException('Session name cannot be empty');
     }
 
+    if (trimmedName.length > 50) {
+      throw new BadRequestException(
+        'Session name cannot be longer than 50 characters',
+      );
+    }
+
     return this.sessionModel
-      .findByIdAndUpdate(
-        sessionId,
-        { name: updateData.name.trim() },
-        { new: true },
-      )
+      .findByIdAndUpdate(sessionId, { name: trimmedName }, { new: true })
       .exec();
   }
 }

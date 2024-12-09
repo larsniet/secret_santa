@@ -168,18 +168,27 @@ export const Dashboard: React.FC = () => {
                 >
                   Session Name
                 </label>
-                <input
-                  type="text"
-                  id="session-name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Enter session name"
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
-                  required
-                  disabled={isSubmitting}
-                />
+                <div className="relative mt-1">
+                  <input
+                    type="text"
+                    id="session-name"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        name: e.target.value.slice(0, 50),
+                      })
+                    }
+                    placeholder="Enter session name"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm pr-16"
+                    required
+                    maxLength={50}
+                    disabled={isSubmitting}
+                  />
+                  <span className="absolute right-3 top-2 text-sm text-gray-400">
+                    {formData.name.length}/50
+                  </span>
+                </div>
               </div>
 
               <div>
