@@ -2,24 +2,24 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
-  Delete,
   Body,
   Param,
-  UseGuards,
   Request,
+  UseGuards,
+  Patch,
+  Delete,
   ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SessionsService } from './sessions.service';
-import { SessionStatus } from './session.schema';
 import { EventPlan } from '../users/user.schema';
+import { SessionStatus } from './session.schema';
 
 @Controller('sessions')
-@UseGuards(JwtAuthGuard)
 export class SessionsController {
   constructor(private readonly sessionsService: SessionsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   async createSession(
     @Request() req,
@@ -31,6 +31,7 @@ export class SessionsController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('my')
   async getUserSessions(@Request() req) {
     return this.sessionsService.getUserSessions(req.user.userId);
@@ -52,39 +53,40 @@ export class SessionsController {
     return session;
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getSession(@Param('id') id: string) {
     return this.sessionsService.getSession(id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  async updateSession(
+    @Param('id') id: string,
+    @Request() req,
+    @Body() updateData: { name: string },
+  ) {
+    return this.sessionsService.updateSession(id, req.user.userId, updateData);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deleteSession(@Param('id') id: string, @Request() req) {
+    await this.sessionsService.deleteSession(id, req.user.userId);
+    return { message: 'Session deleted successfully' };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/status')
   async updateSessionStatus(
-    @Request() req,
     @Param('id') id: string,
-    @Body() updateStatusDto: { status: SessionStatus },
+    @Request() req,
+    @Body() data: { status: SessionStatus },
   ) {
     return this.sessionsService.updateSessionStatus(
       id,
       req.user.userId,
-      updateStatusDto.status,
-    );
-  }
-
-  @Delete(':id')
-  async deleteSession(@Request() req, @Param('id') id: string) {
-    return this.sessionsService.deleteSession(id, req.user.userId);
-  }
-
-  @Patch(':id')
-  async updateSession(
-    @Request() req,
-    @Param('id') id: string,
-    @Body() updateSessionDto: { name: string },
-  ) {
-    return this.sessionsService.updateSession(
-      id,
-      req.user.userId,
-      updateSessionDto,
+      data.status,
     );
   }
 }
