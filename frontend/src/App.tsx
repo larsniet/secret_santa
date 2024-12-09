@@ -10,6 +10,7 @@ import { Home } from "./pages/Home";
 import { JoinSession } from "./pages/JoinSession";
 import { ParticipantPreferences } from "./pages/ParticipantPreferences";
 import { VerifyHandler } from "./components/auth/VerifyHandler";
+import { UserSettings } from "./pages/UserSettings";
 
 function App() {
   return (
@@ -26,6 +27,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <UserSettings />
                 </ProtectedRoute>
               }
             />

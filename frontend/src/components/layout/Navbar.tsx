@@ -1,23 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 export const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Only handle desktop menu clicks
       if (
         menuRef.current &&
         buttonRef.current &&
         !menuRef.current.contains(event.target as Node) &&
         !buttonRef.current.contains(event.target as Node)
       ) {
-        setIsMenuOpen(false);
+        setIsDesktopMenuOpen(false);
       }
     };
 
@@ -58,13 +61,14 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
+          {/* Desktop menu button */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {isAuthenticated ? (
               <div className="relative ml-3">
                 <div>
                   <button
                     ref={buttonRef}
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    onClick={() => setIsDesktopMenuOpen(!isDesktopMenuOpen)}
                     className="flex items-center justify-center h-8 w-8 rounded-full bg-[#B91C1C] hover:bg-[#991818] focus:outline-none transition-colors"
                   >
                     <span className="text-sm font-medium text-white">
@@ -72,7 +76,7 @@ export const Navbar: React.FC = () => {
                     </span>
                   </button>
                 </div>
-                {isMenuOpen && (
+                {isDesktopMenuOpen && (
                   <div
                     ref={menuRef}
                     className="absolute right-0 mt-2 z-10 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
@@ -84,14 +88,14 @@ export const Navbar: React.FC = () => {
                       <Link
                         to="/settings"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={() => setIsDesktopMenuOpen(false)}
                       >
                         Settings
                       </Link>
                       <button
                         onClick={() => {
                           logout();
-                          setIsMenuOpen(false);
+                          setIsDesktopMenuOpen(false);
                         }}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
@@ -122,11 +126,11 @@ export const Navbar: React.FC = () => {
           {/* Mobile menu button */}
           <div className="flex items-center sm:hidden">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#B91C1C]"
             >
               <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
+              {isMobileMenuOpen ? (
                 <svg
                   className="block h-6 w-6"
                   xmlns="http://www.w3.org/2000/svg"
@@ -163,27 +167,38 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile menu */}
-      <div className={`sm:hidden ${isMenuOpen ? "block" : "hidden"}`}>
+      <div className={`sm:hidden ${isMobileMenuOpen ? "block" : "hidden"}`}>
         {isAuthenticated ? (
           <div className="pt-2 pb-3 space-y-1">
-            <Link
-              to="/dashboard"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMobileMenuOpen(false);
+                navigate("/dashboard");
+              }}
+              className={`block w-full text-left pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
                 location.pathname === "/dashboard"
                   ? "border-[#B91C1C] text-[#B91C1C] bg-red-50"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
             >
               Dashboard
-            </Link>
-            <Link
-              to="/settings"
-              className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMobileMenuOpen(false);
+                navigate("/settings");
+              }}
+              className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
             >
               Settings
-            </Link>
+            </button>
             <button
-              onClick={logout}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                logout();
+              }}
               className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
             >
               Sign out
@@ -191,18 +206,26 @@ export const Navbar: React.FC = () => {
           </div>
         ) : (
           <div className="pt-2 pb-3 space-y-1">
-            <Link
-              to="/login"
-              className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMobileMenuOpen(false);
+                navigate("/login");
+              }}
+              className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50"
             >
               Sign in
-            </Link>
-            <Link
-              to="/register"
-              className="block pl-3 pr-4 py-2 border-l-4 border-[#B91C1C] text-base font-medium text-[#B91C1C] bg-red-50"
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMobileMenuOpen(false);
+                navigate("/register");
+              }}
+              className="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-[#B91C1C] text-base font-medium text-[#B91C1C] bg-red-50"
             >
               Get Started
-            </Link>
+            </button>
           </div>
         )}
       </div>
