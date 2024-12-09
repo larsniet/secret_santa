@@ -19,8 +19,7 @@ export class AssignmentsService {
 
   async createAndSendAssignments(sessionId: string, userId: string) {
     // Verify session and permissions
-    const session =
-      await this.sessionsService.getSessionByInviteCode(sessionId);
+    const session = await this.sessionsService.getSession(sessionId);
     if (session.creator.toString() !== userId) {
       throw new UnauthorizedException(
         'Only the creator can create assignments',

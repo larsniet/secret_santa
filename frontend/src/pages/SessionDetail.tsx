@@ -56,6 +56,13 @@ export const SessionDetail: React.FC = () => {
     }
   }, [session]);
 
+  useEffect(() => {
+    if (session?.status === "completed") {
+      navigate("/dashboard");
+      return;
+    }
+  }, [session, navigate]);
+
   const loadSessionAndParticipants = useCallback(async () => {
     if (!id) return;
 
@@ -125,12 +132,8 @@ export const SessionDetail: React.FC = () => {
     try {
       setIsSubmitting(true);
       await participantService.createAssignments(session._id);
-      const updatedSession = await sessionService.updateSessionStatus(
-        session._id,
-        "completed"
-      );
-      setSession(updatedSession);
       showAlert("success", "Secret Santa assignments have been sent!");
+      navigate("/dashboard");
     } catch (err: any) {
       showAlert(
         "error",
@@ -143,7 +146,7 @@ export const SessionDetail: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!session) return;
+    if (!session || session.status === "completed") return;
 
     try {
       setIsSubmitting(true);
@@ -358,27 +361,29 @@ export const SessionDetail: React.FC = () => {
                 <h1 className="text-3xl font-bold text-gray-900">
                   {session?.name}
                 </h1>
-                <button
-                  onClick={() => {
-                    setEditedName(session?.name || "");
-                    setIsEditingName(true);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                {session?.status !== "completed" && (
+                  <button
+                    onClick={() => {
+                      setEditedName(session?.name || "");
+                      setIsEditingName(true);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
-                </button>
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                )}
               </div>
             )}
             <p className="mt-1 text-sm text-gray-500">
@@ -417,13 +422,15 @@ export const SessionDetail: React.FC = () => {
                 Complete Payment
               </Button>
             )}
-            <Button
-              variant="danger"
-              onClick={() => setDeleteModalOpen(true)}
-              isLoading={isSubmitting}
-            >
-              Delete Session
-            </Button>
+            {session.status !== "completed" && (
+              <Button
+                variant="danger"
+                onClick={() => setDeleteModalOpen(true)}
+                isLoading={isSubmitting}
+              >
+                Delete Session
+              </Button>
+            )}
           </div>
         </div>
 

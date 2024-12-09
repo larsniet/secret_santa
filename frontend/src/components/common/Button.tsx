@@ -62,7 +62,11 @@ export const Button: React.FC<ButtonProps> = ({
     >
       {isLoading ? (
         <>
-          <Loading size="sm" centered={false} className="-ml-1 mr-2" />
+          <Loading
+            size="sm"
+            centered={false}
+            className="-ml-1 mr-2 h-[13px] w-[13px]"
+          />
           Loading...
         </>
       ) : (

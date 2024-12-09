@@ -2,7 +2,7 @@ import { Controller, Post, Param, UseGuards, Request } from '@nestjs/common';
 import { AssignmentsService } from './assignments.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-@Controller('api/sessions/:sessionId/assignments')
+@Controller('sessions/:sessionId/assignments')
 export class AssignmentsController {
   constructor(private readonly assignmentsService: AssignmentsService) {}
 
