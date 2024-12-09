@@ -46,7 +46,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <AlertContext.Provider value={{ showAlert }}>
       {children}
-      <div className="fixed bottom-4 right-4 space-y-2 z-50">
+      <div className="fixed inset-x-0 bottom-4 px-4 sm:right-4 sm:left-auto sm:px-0 space-y-2 z-50">
         {alerts.map(({ id, type, message, isLeaving }) => (
           <Alert
             key={id}
