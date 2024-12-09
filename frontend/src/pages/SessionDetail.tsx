@@ -290,7 +290,9 @@ export const SessionDetail: React.FC = () => {
                   : "bg-gray-50 text-gray-700 border border-gray-200"
               }`}
             >
-              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+              {session.status
+                .replace(/_/g, " ")
+                .replace(/\b\w/g, (char) => char.toUpperCase())}
             </span>
             <Button
               variant="danger"
@@ -302,25 +304,64 @@ export const SessionDetail: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-          <h2 className="text-lg font-medium text-gray-900 mb-2">
-            Invite Participants
-          </h2>
-          <p className="text-sm text-gray-600 mb-3">
-            Share this link with participants to join your Secret Santa session:
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={`${window.location.origin}/join/${session.inviteCode}`}
-              readOnly
-              className="flex-1 p-2 bg-white border border-gray-300 rounded-md text-sm text-gray-600"
-            />
-            <Button variant="secondary" onClick={copyInviteLink} size="md">
-              {inviteCopied ? "Copied!" : "Copy Link"}
-            </Button>
+        {session.status === "pending_payment" && (
+          <div className="mt-6">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+              <h2 className="text-xl font-semibold text-yellow-800 mb-3">
+                Payment Required
+              </h2>
+              <p className="text-yellow-700 mb-4">
+                Please complete the payment to activate your session and start
+                inviting participants.
+              </p>
+              <Button
+                onClick={async () => {
+                  try {
+                    const checkoutSession =
+                      await sessionService.createCheckoutSession(session._id);
+                    const stripe = await stripePromise;
+                    if (!stripe)
+                      throw new Error("Failed to load payment system");
+                    await stripe.redirectToCheckout({
+                      sessionId: checkoutSession.id,
+                    });
+                  } catch (err: any) {
+                    showAlert(
+                      "error",
+                      err.response?.data?.message ||
+                        "Failed to initiate payment"
+                    );
+                  }
+                }}
+              >
+                Complete Payment
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {session.status === "active" && (
+          <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">
+              Invite Participants
+            </h2>
+            <p className="text-sm text-gray-600 mb-3">
+              Share this link with participants to join your Secret Santa
+              session:
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <input
+                type="text"
+                value={`${window.location.origin}/join/${session.inviteCode}`}
+                readOnly
+                className="flex-1 p-2 bg-white border border-gray-300 rounded-md text-sm text-gray-600"
+              />
+              <Button variant="secondary" onClick={copyInviteLink} size="md">
+                {inviteCopied ? "Copied!" : "Copy Link"}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {session.status === "active" && (
           <div className="bg-white p-6 rounded-lg shadow">
@@ -540,84 +581,89 @@ export const SessionDetail: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-6">
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Participants ({participants.length})
-                </h2>
-                {session.status === "active" && participants.length >= 2 && (
-                  <Button onClick={handleStartSession} isLoading={isSubmitting}>
-                    Start Secret Santa
-                  </Button>
+        {(session.status === "active" || session.status === "archived") && (
+          <div className="mt-6">
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Participants ({participants.length})
+                  </h2>
+                  {session.status === "active" && participants.length >= 2 && (
+                    <Button
+                      onClick={handleStartSession}
+                      isLoading={isSubmitting}
+                    >
+                      Start Secret Santa
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="divide-y divide-gray-200">
+                {participants.length === 0 ? (
+                  <p className="px-6 py-4 text-gray-500 text-center">
+                    No participants yet. Add one to get started!
+                  </p>
+                ) : (
+                  participants.map((participant) => (
+                    <div
+                      key={participant._id}
+                      className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                    >
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {participant.name}
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {participant.email}
+                        </p>
+                        {session.status === "completed" &&
+                          participant.assignedTo && (
+                            <p className="mt-2 text-sm text-[#B91C1C]">
+                              Assigned to: {participant.assignedTo}
+                            </p>
+                          )}
+                        {participant.preferences &&
+                          Object.values(participant.preferences).some(
+                            Boolean
+                          ) && (
+                            <div className="mt-2 text-sm text-gray-500">
+                              <span className="font-medium">
+                                Has gift preferences
+                              </span>
+                            </div>
+                          )}
+                      </div>
+                      {session.status === "active" && (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button
+                            variant="secondary"
+                            onClick={() => startEditingPreferences(participant)}
+                          >
+                            {participant.preferences &&
+                            Object.values(participant.preferences).some(Boolean)
+                              ? "View Preferences"
+                              : "Add Preferences"}
+                          </Button>
+                          <Button
+                            variant="danger"
+                            onClick={() =>
+                              handleDeleteParticipant(participant._id)
+                            }
+                            isLoading={isSubmitting}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))
                 )}
               </div>
             </div>
-
-            <div className="divide-y divide-gray-200">
-              {participants.length === 0 ? (
-                <p className="px-6 py-4 text-gray-500 text-center">
-                  No participants yet. Add one to get started!
-                </p>
-              ) : (
-                participants.map((participant) => (
-                  <div
-                    key={participant._id}
-                    className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-                  >
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">
-                        {participant.name}
-                      </h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {participant.email}
-                      </p>
-                      {session.status === "completed" &&
-                        participant.assignedTo && (
-                          <p className="mt-2 text-sm text-[#B91C1C]">
-                            Assigned to: {participant.assignedTo}
-                          </p>
-                        )}
-                      {participant.preferences &&
-                        Object.values(participant.preferences).some(
-                          Boolean
-                        ) && (
-                          <div className="mt-2 text-sm text-gray-500">
-                            <span className="font-medium">
-                              Has gift preferences
-                            </span>
-                          </div>
-                        )}
-                    </div>
-                    {session.status === "active" && (
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Button
-                          variant="secondary"
-                          onClick={() => startEditingPreferences(participant)}
-                        >
-                          {participant.preferences &&
-                          Object.values(participant.preferences).some(Boolean)
-                            ? "View Preferences"
-                            : "Add Preferences"}
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={() =>
-                            handleDeleteParticipant(participant._id)
-                          }
-                          isLoading={isSubmitting}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
           </div>
-        </div>
+        )}
 
         {editingPreferences && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center !m-0">

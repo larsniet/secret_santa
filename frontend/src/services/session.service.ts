@@ -49,9 +49,9 @@ class SessionService {
   }
 
   async createCheckoutSession(sessionId: string): Promise<{ id: string }> {
-    const response = await api.post<{ id: string }>(
-      `/sessions/${sessionId}/checkout`
-    );
+    const response = await api.post<{ id: string }>(`/subscriptions/checkout`, {
+      sessionId,
+    });
     return response.data;
   }
 

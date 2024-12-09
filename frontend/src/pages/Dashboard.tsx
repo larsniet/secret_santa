@@ -362,8 +362,9 @@ export const Dashboard: React.FC = () => {
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >
-                            {session.status.charAt(0).toUpperCase() +
-                              session.status.slice(1)}
+                            {session.status
+                              .replace(/_/g, " ")
+                              .replace(/\b\w/g, (char) => char.toUpperCase())}
                           </span>
                           <button
                             onClick={(e) => handleDelete(session._id, e)}
