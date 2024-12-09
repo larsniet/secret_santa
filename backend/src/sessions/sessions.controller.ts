@@ -8,6 +8,7 @@ import {
   Param,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SessionsService } from './sessions.service';
@@ -37,7 +38,18 @@ export class SessionsController {
 
   @Get('invite/:inviteCode')
   async getSessionByInviteCode(@Param('inviteCode') inviteCode: string) {
-    return this.sessionsService.getSessionByInviteCode(inviteCode);
+    const session =
+      await this.sessionsService.getSessionByInviteCode(inviteCode);
+    if (session.status === SessionStatus.PENDING_PAYMENT) {
+      throw new ForbiddenException('Cannot join session - payment pending');
+    }
+    if (session.status === SessionStatus.COMPLETED) {
+      throw new ForbiddenException('Cannot join session - already completed');
+    }
+    if (session.status === SessionStatus.ARCHIVED) {
+      throw new ForbiddenException('Cannot join session - archived');
+    }
+    return session;
   }
 
   @Get(':id')

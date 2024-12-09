@@ -7,6 +7,8 @@ import { sessionService, Session } from "../services/session.service";
 import { stripePromise } from "../lib/stripe";
 import { EventPlan, PLAN_LIMITS } from "../types/plans";
 import { Loading } from "../components/common/Loading";
+import { ConfirmModal } from "../components/common/ConfirmModal";
+import { StatusBadge } from "../components/common/StatusBadge";
 
 export const Dashboard: React.FC = () => {
   const { showAlert } = useAlert();
@@ -18,6 +20,8 @@ export const Dashboard: React.FC = () => {
     name: "",
     plan: EventPlan.FREE,
   });
+  const [deleteSessionId, setDeleteSessionId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
 
   useEffect(() => {
     loadSessions();
@@ -37,10 +41,12 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleDelete = async (sessionId: string, e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleDelete = async () => {
+    if (!sessionToDelete) return;
+
     try {
-      await sessionService.deleteSession(sessionId);
+      setIsSubmitting(true);
+      await sessionService.deleteSession(sessionToDelete._id);
       showAlert("success", "Session deleted successfully");
       loadSessions();
     } catch (err: any) {
@@ -48,6 +54,9 @@ export const Dashboard: React.FC = () => {
         "error",
         err.response?.data?.message || "Failed to delete session"
       );
+    } finally {
+      setIsSubmitting(false);
+      setSessionToDelete(null);
     }
   };
 
@@ -177,7 +186,7 @@ export const Dashboard: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-4">
                   Select Plan
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {Object.entries(PLAN_LIMITS).map(([plan, details]) => {
                     const hasActiveFreeSession =
                       plan === EventPlan.FREE &&
@@ -189,22 +198,20 @@ export const Dashboard: React.FC = () => {
                     return (
                       <div
                         key={plan}
-                        className={`relative rounded-lg border p-4 ${
-                          hasActiveFreeSession
-                            ? "opacity-50 cursor-not-allowed"
-                            : "cursor-pointer " +
-                              (formData.plan === plan
-                                ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
-                                : "border-gray-200 hover:border-[#B91C1C]")
+                        className={`relative rounded-lg border p-6 cursor-pointer ${
+                          plan === formData.plan
+                            ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
+                            : "border-gray-200 hover:border-[#B91C1C]"
+                        } ${
+                          {
+                            BUSINESS: "col-span-2 md:col-span-1",
+                            GROUP: "col-span-2 md:col-span-1",
+                            FREE: "col-span-2 md:col-span-1",
+                          }[plan as EventPlan]
                         }`}
-                        onClick={() => {
-                          if (!hasActiveFreeSession) {
-                            setFormData({
-                              ...formData,
-                              plan: plan as EventPlan,
-                            });
-                          }
-                        }}
+                        onClick={() =>
+                          setFormData({ ...formData, plan: plan as EventPlan })
+                        }
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -300,21 +307,8 @@ export const Dashboard: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sessions.map((session) => {
-              const participantSize =
-                session.participants?.length >= 10
-                  ? "lg"
-                  : session.participants?.length >= 5
-                  ? "md"
-                  : "sm";
-
-              const cardSizeClass = {
-                lg: "min-h-[200px]",
-                md: "min-h-[160px]",
-                sm: "min-h-[140px]",
-              }[participantSize];
-
               const planStyles = {
                 BUSINESS:
                   "bg-gradient-to-br from-purple-50 to-white border-purple-200 hover:border-purple-300",
@@ -323,54 +317,85 @@ export const Dashboard: React.FC = () => {
                 FREE: "bg-white border-gray-200 hover:border-gray-300",
               }[session.plan as EventPlan];
 
-              const planBadgeStyles = {
-                BUSINESS: "bg-purple-100 text-purple-800",
-                GROUP: "bg-blue-100 text-blue-800",
-                FREE: "bg-gray-100 text-gray-600",
-              }[session.plan as EventPlan];
-
               return (
                 <Link
                   key={session._id}
                   to={`/sessions/${session._id}`}
-                  className={`block transition-all duration-200 ${cardSizeClass}`}
+                  className="block transition-all duration-200"
                 >
                   <div
                     className={`h-full p-6 rounded-lg border ${planStyles} hover:shadow-md`}
                   >
                     <div className="flex flex-col h-full">
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="text-lg font-medium text-gray-900 mb-1">
                             {session.name}
                           </h3>
-                          <span
-                            className={`inline-block px-2 py-1 rounded-md text-xs font-medium ${planBadgeStyles}`}
+                          <div className="flex items-center gap-2 mb-3">
+                            <StatusBadge type="status" value={session.status} />
+                            <StatusBadge type="plan" value={session.plan} />
+                          </div>
+                        </div>
+                        <Button
+                          variant="danger"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setSessionToDelete(session);
+                          }}
+                          isLoading={isSubmitting}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-col gap-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
                           >
-                            {session.plan}
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                          </svg>
+                          <span>
+                            {session.participants?.length || 0} participants
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              session.status === "active"
-                                ? "bg-green-100 text-green-800"
-                                : session.status === "completed"
-                                ? "bg-blue-100 text-blue-800"
-                                : session.status === "pending_payment"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
+                          <svg
+                            className="w-5 h-5 text-gray-400"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
                           >
-                            {session.status
-                              .replace(/_/g, " ")
-                              .replace(/\b\w/g, (char) => char.toUpperCase())}
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                          <span>
+                            Created{" "}
+                            {new Date(session.createdAt).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              }
+                            )}
                           </span>
-                          <button
-                            onClick={(e) => handleDelete(session._id, e)}
-                            className="p-1 rounded-full hover:bg-red-100 text-red-600 transition-colors"
-                            title="Delete session"
-                          >
+                        </div>
+                        {session.status === "pending_payment" && (
+                          <div className="flex items-center gap-2 text-yellow-600">
                             <svg
                               className="w-5 h-5"
                               fill="none"
@@ -381,28 +406,12 @@ export const Dashboard: React.FC = () => {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="mt-auto flex justify-between items-end text-sm text-gray-500">
-                        <span>
-                          {session.participants?.length || 0} participants
-                        </span>
-                        <span>
-                          Created{" "}
-                          {new Date(session.createdAt).toLocaleDateString(
-                            "en-GB",
-                            {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                            }
-                          )}
-                        </span>
+                            <span>Payment required to activate</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -411,6 +420,16 @@ export const Dashboard: React.FC = () => {
             })}
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmModal
+          isOpen={!!sessionToDelete}
+          onClose={() => setSessionToDelete(null)}
+          onConfirm={handleDelete}
+          title="Delete Session"
+          message={`Are you sure you want to delete the session "${sessionToDelete?.name}"? This action cannot be undone.`}
+          confirmText="Delete Session"
+        />
       </div>
     </Layout>
   );

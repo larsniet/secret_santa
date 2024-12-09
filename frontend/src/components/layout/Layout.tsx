@@ -1,35 +1,18 @@
 import React from "react";
-import { Navbar } from "./Navbar";
 import { Loading } from "../common/Loading";
+import { Navbar } from "./Navbar";
 
 interface LayoutProps {
   children: React.ReactNode;
   isLoading?: boolean;
-  fullWidth?: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({
-  children,
-  isLoading,
-  fullWidth = false,
-}) => {
+export const Layout: React.FC<LayoutProps> = ({ children, isLoading }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main
-        className={`flex-1 ${
-          isLoading
-            ? "flex items-center justify-center min-h-[calc(100vh-64px)]"
-            : "py-8"
-        }`}
-      >
-        <div className={`${!isLoading ? "px-4 sm:px-6 lg:px-8" : ""} w-full`}>
-          <div
-            className={`${!fullWidth && !isLoading ? "max-w-7xl mx-auto" : ""}`}
-          >
-            {isLoading ? <Loading /> : children}
-          </div>
-        </div>
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-0">{isLoading ? <Loading /> : children}</div>
       </main>
     </div>
   );

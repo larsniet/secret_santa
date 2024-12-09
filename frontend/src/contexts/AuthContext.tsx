@@ -51,11 +51,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setupAuth(response.access_token, response.user);
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    plan?: string
+  ) => {
     const response = await authService.register({
       name,
       email,
       password,
+      plan,
     });
     setupAuth(response.access_token, response.user);
   };

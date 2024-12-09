@@ -12,6 +12,8 @@ import { useAlert } from "../contexts/AlertContext";
 import { Loading } from "../components/common/Loading";
 import { PLAN_LIMITS, EventPlan } from "../types/plans";
 import { stripePromise } from "../lib/stripe";
+import { ConfirmModal } from "../components/common/ConfirmModal";
+import { StatusBadge } from "../components/common/StatusBadge";
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +43,10 @@ export const SessionDetail: React.FC = () => {
     restrictions: "",
   });
   const [selectedPlan, setSelectedPlan] = useState<EventPlan | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteParticipantId, setDeleteParticipantId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (session) {
@@ -134,12 +140,26 @@ export const SessionDetail: React.FC = () => {
     }
   };
 
+  const handleDelete = async () => {
+    if (!session) return;
+
+    try {
+      setIsSubmitting(true);
+      await sessionService.deleteSession(session._id);
+      navigate("/dashboard");
+      showAlert("success", "Session deleted successfully");
+    } catch (err: any) {
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to delete session"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteParticipant = async (participantId: string) => {
-    if (
-      !session ||
-      !window.confirm("Are you sure you want to remove this participant?")
-    )
-      return;
+    if (!session) return;
 
     try {
       setIsSubmitting(true);
@@ -226,28 +246,6 @@ export const SessionDetail: React.FC = () => {
     });
   };
 
-  const handleDelete = async () => {
-    if (
-      !session ||
-      !window.confirm("Are you sure you want to delete this session?")
-    )
-      return;
-
-    try {
-      setIsSubmitting(true);
-      await sessionService.deleteSession(session._id);
-      showAlert("success", "Session deleted successfully");
-      navigate("/dashboard");
-    } catch (err: any) {
-      showAlert(
-        "error",
-        err.response?.data?.message || "Failed to delete session"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <Layout isLoading>
@@ -281,37 +279,35 @@ export const SessionDetail: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span
-              className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center ${
-                session.status === "active"
-                  ? "bg-green-50 text-green-700 border border-green-200"
-                  : session.status === "completed"
-                  ? "bg-blue-50 text-blue-700 border border-blue-200"
-                  : session.status === "pending_payment"
-                  ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                  : "bg-gray-50 text-gray-700 border border-gray-200"
-              }`}
-            >
-              {session.status
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, (char) => char.toUpperCase())}{" "}
-            </span>
-            <span
-              className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center border ${
-                {
-                  BUSINESS: "bg-purple-50 text-purple-800 border-purple-200",
-                  GROUP: "bg-blue-50 text-blue-800 border-blue-200",
-                  FREE: "bg-gray-50 text-gray-800 border-gray-200",
-                }[session.plan as EventPlan]
-              }`}
-            >
-              {session.plan.charAt(0).toUpperCase() +
-                session.plan.toLowerCase().slice(1)}{" "}
-              Plan
-            </span>
+            <StatusBadge type="status" value={session.status} />
+            <StatusBadge type="plan" value={session.plan} />
+            {session.status === "pending_payment" && (
+              <Button
+                onClick={async () => {
+                  try {
+                    const checkoutSession =
+                      await sessionService.createCheckoutSession(session._id);
+                    const stripe = await stripePromise;
+                    if (!stripe)
+                      throw new Error("Failed to load payment system");
+                    await stripe.redirectToCheckout({
+                      sessionId: checkoutSession.id,
+                    });
+                  } catch (err: any) {
+                    showAlert(
+                      "error",
+                      err.response?.data?.message ||
+                        "Failed to initiate payment"
+                    );
+                  }
+                }}
+              >
+                Complete Payment
+              </Button>
+            )}
             <Button
               variant="danger"
-              onClick={handleDelete}
+              onClick={() => setDeleteModalOpen(true)}
               isLoading={isSubmitting}
             >
               Delete Session
@@ -664,7 +660,7 @@ export const SessionDetail: React.FC = () => {
                           <Button
                             variant="danger"
                             onClick={() =>
-                              handleDeleteParticipant(participant._id)
+                              setDeleteParticipantId(participant._id)
                             }
                             isLoading={isSubmitting}
                           >
@@ -775,6 +771,31 @@ export const SessionDetail: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Session Delete Modal */}
+        <ConfirmModal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={handleDelete}
+          title="Delete Session"
+          message="Are you sure you want to delete this session? This action cannot be undone."
+          confirmText="Delete Session"
+        />
+
+        {/* Participant Delete Modal */}
+        <ConfirmModal
+          isOpen={!!deleteParticipantId}
+          onClose={() => setDeleteParticipantId(null)}
+          onConfirm={() => {
+            if (deleteParticipantId) {
+              handleDeleteParticipant(deleteParticipantId);
+              setDeleteParticipantId(null);
+            }
+          }}
+          title="Remove Participant"
+          message="Are you sure you want to remove this participant? This action cannot be undone."
+          confirmText="Remove Participant"
+        />
       </div>
     </Layout>
   );

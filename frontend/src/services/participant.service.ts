@@ -52,6 +52,11 @@ class ParticipantService {
     return response.data;
   }
 
+  async getAssignments(sessionId: string): Promise<any[]> {
+    const response = await api.get(`/sessions/${sessionId}/assignments`);
+    return response.data;
+  }
+
   async updatePreferences(
     sessionId: string,
     participantId: string,

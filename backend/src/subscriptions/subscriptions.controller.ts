@@ -24,6 +24,7 @@ export class SubscriptionsController {
     @Headers('stripe-signature') signature: string,
     @Req() request: any,
   ) {
+    // Access the raw body directly from the request
     const payload = request.body;
     if (!payload) {
       throw new Error('No webhook payload was provided');

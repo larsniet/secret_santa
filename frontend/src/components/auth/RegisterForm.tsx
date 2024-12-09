@@ -12,6 +12,7 @@ export const RegisterForm: React.FC = () => {
     name: "",
     email: "",
     password: "",
+    plan: "FREE",
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,7 +21,12 @@ export const RegisterForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await register(formData.name, formData.email, formData.password);
+      await register(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.plan
+      );
       navigate("/dashboard");
     } catch (err: any) {
       if (
@@ -41,7 +47,7 @@ export const RegisterForm: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
+      <div className="max-w-4xl w-full">
         <div className="text-center mb-8">
           <Link to="/" className="block text-center mb-8">
             <div className="inline-flex items-center justify-center">

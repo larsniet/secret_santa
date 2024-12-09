@@ -7,6 +7,7 @@ export interface LoginData {
 
 export interface RegisterData extends LoginData {
   name: string;
+  plan?: string;
 }
 
 export interface AuthResponse {

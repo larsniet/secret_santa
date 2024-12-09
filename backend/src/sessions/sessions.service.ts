@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -33,7 +34,10 @@ export class SessionsService {
 
   async getUserSessions(userId: string): Promise<Session[]> {
     return this.sessionModel
-      .find({ creator: userId })
+      .find({
+        creator: userId,
+        status: { $ne: SessionStatus.ARCHIVED }, // Don't show archived by default
+      })
       .populate('participants')
       .sort({ createdAt: -1 })
       .exec();
@@ -52,6 +56,9 @@ export class SessionsService {
     if (!session) {
       throw new NotFoundException('Session not found');
     }
+    if (session.status === SessionStatus.PENDING_PAYMENT) {
+      throw new BadRequestException('Session is pending payment');
+    }
     return session;
   }
 
@@ -60,6 +67,23 @@ export class SessionsService {
     if (!session) {
       throw new NotFoundException('Session not found');
     }
+
+    // Validate status transitions
+    if (
+      session.status === SessionStatus.COMPLETED &&
+      status !== SessionStatus.ARCHIVED
+    ) {
+      throw new BadRequestException('Completed sessions can only be archived');
+    }
+    if (session.status === SessionStatus.ARCHIVED) {
+      throw new BadRequestException('Archived sessions cannot be updated');
+    }
+    if (status === SessionStatus.COMPLETED && !session.participants?.length) {
+      throw new BadRequestException(
+        'Cannot complete a session with no participants',
+      );
+    }
+
     session.status = status;
     if (status === SessionStatus.COMPLETED) {
       session.completedAt = new Date();
@@ -83,6 +107,9 @@ export class SessionsService {
     const session = await this.getSession(sessionId);
     if (session.creator.toString() !== userId) {
       throw new UnauthorizedException('Not authorized to delete this session');
+    }
+    if (session.status === SessionStatus.COMPLETED) {
+      throw new BadRequestException('Completed sessions cannot be deleted');
     }
     await this.sessionModel.deleteOne({ _id: sessionId });
   }
