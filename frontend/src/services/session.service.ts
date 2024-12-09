@@ -55,6 +55,11 @@ class SessionService {
     return response.data;
   }
 
+  async updateSession(id: string, data: { name: string }): Promise<Session> {
+    const response = await api.patch<Session>(`/sessions/${id}`, data);
+    return response.data;
+  }
+
   async deleteSession(id: string): Promise<void> {
     await api.delete(`/sessions/${id}`);
   }

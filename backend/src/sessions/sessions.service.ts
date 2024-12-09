@@ -122,4 +122,28 @@ export class SessionsService {
       })
       .exec();
   }
+
+  async updateSession(
+    sessionId: string,
+    userId: string,
+    updateData: { name: string },
+  ): Promise<Session> {
+    const session = await this.getSession(sessionId);
+
+    if (session.creator.toString() !== userId) {
+      throw new UnauthorizedException('Not authorized to update this session');
+    }
+
+    if (!updateData.name || !updateData.name.trim()) {
+      throw new BadRequestException('Session name cannot be empty');
+    }
+
+    return this.sessionModel
+      .findByIdAndUpdate(
+        sessionId,
+        { name: updateData.name.trim() },
+        { new: true },
+      )
+      .exec();
+  }
 }

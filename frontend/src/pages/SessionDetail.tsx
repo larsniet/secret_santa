@@ -47,6 +47,8 @@ export const SessionDetail: React.FC = () => {
   const [deleteParticipantId, setDeleteParticipantId] = useState<string | null>(
     null
   );
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
 
   useEffect(() => {
     if (session) {
@@ -246,6 +248,27 @@ export const SessionDetail: React.FC = () => {
     });
   };
 
+  const handleNameSave = async () => {
+    if (!session || !editedName.trim()) return;
+
+    try {
+      setIsSubmitting(true);
+      const updatedSession = await sessionService.updateSession(session._id, {
+        name: editedName.trim(),
+      });
+      setSession(updatedSession);
+      setIsEditingName(false);
+      showAlert("success", "Session name updated successfully");
+    } catch (err: any) {
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to update session name"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Layout isLoading>
@@ -268,10 +291,91 @@ export const SessionDetail: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{session.name}</h1>
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="text-3xl font-bold text-gray-900 border-b border-gray-300 focus:border-[#B91C1C] focus:outline-none bg-transparent"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleNameSave();
+                    } else if (e.key === "Escape") {
+                      setIsEditingName(false);
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleNameSave}
+                  disabled={isSubmitting}
+                  className="text-green-600 hover:text-green-700"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setIsEditingName(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {session?.name}
+                </h1>
+                <button
+                  onClick={() => {
+                    setEditedName(session?.name || "");
+                    setIsEditingName(true);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
             <p className="mt-1 text-sm text-gray-500">
               Created on{" "}
-              {new Date(session.createdAt).toLocaleDateString("en-GB", {
+              {new Date(session?.createdAt || "").toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
