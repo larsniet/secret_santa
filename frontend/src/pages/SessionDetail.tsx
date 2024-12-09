@@ -228,27 +228,6 @@ export const SessionDetail: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (newStatus: Session["status"]) => {
-    if (!session) return;
-
-    try {
-      setIsSubmitting(true);
-      const updatedSession = await sessionService.updateSessionStatus(
-        session._id,
-        newStatus
-      );
-      setSession(updatedSession);
-      showAlert("success", `Session status updated to ${newStatus}`);
-    } catch (err: any) {
-      showAlert(
-        "error",
-        err.response?.data?.message || "Failed to update session status"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <Layout isLoading>
@@ -276,47 +255,19 @@ export const SessionDetail: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <select
-                value={session.status}
-                onChange={(e) =>
-                  handleStatusChange(e.target.value as Session["status"])
-                }
-                className={`appearance-none pl-3 pr-10 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B91C1C] ${
-                  session.status === "active"
-                    ? "bg-green-50 text-green-700 border-green-200"
-                    : session.status === "completed"
-                    ? "bg-blue-50 text-blue-700 border-blue-200"
-                    : "bg-gray-50 text-gray-700 border-gray-200"
-                }`}
-                disabled={isSubmitting}
-              >
-                <option value="active" className="bg-green-50 text-green-700">
-                  Active
-                </option>
-                <option value="completed" className="bg-blue-50 text-blue-700">
-                  Completed
-                </option>
-                <option value="archived" className="bg-gray-50 text-gray-700">
-                  Archived
-                </option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
+            <span
+              className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center ${
+                session.status === "active"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : session.status === "completed"
+                  ? "bg-blue-50 text-blue-700 border border-blue-200"
+                  : session.status === "pending_payment"
+                  ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                  : "bg-gray-50 text-gray-700 border border-gray-200"
+              }`}
+            >
+              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            </span>
             <Button
               variant="danger"
               onClick={handleDelete}
