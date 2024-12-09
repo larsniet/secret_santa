@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { useAlert } from "../contexts/AlertContext";
 import { participantService } from "../services/participant.service";
+import { Loading } from "../components/common/Loading";
 
 interface Preferences {
   interests: string;
@@ -78,12 +79,7 @@ export const ParticipantPreferences: React.FC = () => {
   if (isLoading) {
     return (
       <Layout isLoading>
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"
-          role="status"
-        >
-          <span className="sr-only">Loading...</span>
-        </div>
+        <Loading />
       </Layout>
     );
   }

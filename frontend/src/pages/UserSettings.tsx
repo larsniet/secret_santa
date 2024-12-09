@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
 import { userService } from "../services/user.service";
+import { Loading } from "../components/common/Loading";
 
 export const UserSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -99,13 +100,8 @@ export const UserSettings: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout isLoading>
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"
-          role="status"
-        >
-          <span className="sr-only">Loading...</span>
-        </div>
+      <Layout>
+        <Loading />
       </Layout>
     );
   }

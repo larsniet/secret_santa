@@ -8,6 +8,7 @@ import {
   Participant,
 } from "../services/participant.service";
 import { useAlert } from "../contexts/AlertContext";
+import { Loading } from "../components/common/Loading";
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -248,15 +249,18 @@ export const SessionDetail: React.FC = () => {
     }
   };
 
-  if (isLoading || !session) {
+  if (isLoading) {
     return (
       <Layout isLoading>
-        <div
-          className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]"
-          role="status"
-        >
-          <span className="sr-only">Loading...</span>
-        </div>
+        <Loading />
+      </Layout>
+    );
+  }
+
+  if (isLoading || !session) {
+    return (
+      <Layout>
+        <Loading />
       </Layout>
     );
   }

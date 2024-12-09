@@ -1,5 +1,6 @@
 import React from "react";
 import { Navbar } from "./Navbar";
+import { Loading } from "../common/Loading";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -26,7 +27,7 @@ export const Layout: React.FC<LayoutProps> = ({
           <div
             className={`${!fullWidth && !isLoading ? "max-w-7xl mx-auto" : ""}`}
           >
-            {children}
+            {isLoading ? <Loading /> : children}
           </div>
         </div>
       </main>

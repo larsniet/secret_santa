@@ -6,6 +6,7 @@ import { useAlert } from "../contexts/AlertContext";
 import { sessionService, Session } from "../services/session.service";
 import { loadStripe } from "@stripe/stripe-js";
 import { EventPlan, PLAN_LIMITS } from "../types/plans";
+import { Loading } from "../components/common/Loading";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || "");
 
@@ -89,10 +90,8 @@ export const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B91C1C]" />
-        </div>
+      <Layout isLoading>
+        <Loading />
       </Layout>
     );
   }
