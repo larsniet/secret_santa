@@ -116,12 +116,7 @@ export class ParticipantsService {
   async updatePreferences(
     sessionId: string,
     participantId: string,
-    preferences: {
-      interests?: string;
-      sizes?: string;
-      wishlist?: string;
-      restrictions?: string;
-    },
+    preferences: Participant['preferences'],
   ): Promise<Participant> {
     const participant = await this.participantModel
       .findOne({

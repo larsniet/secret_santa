@@ -1,104 +1,78 @@
-<div>
-  <section style="margin-bottom: 10px">
-    <span style="font-size: 18pt">
-      <img
-        data-emoji="🎅"
-        style="width: 20px; height: 20px"
-        alt="🎅"
-        aria-label="🎅"
-        draggable="false"
-        src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f385/32.png"
-        loading="lazy"
-      /><img
-        data-emoji="🎄"
-        style="width: 20px; height: 20px"
-        alt="🎄"
-        aria-label="🎄"
-        draggable="false"
-        src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f384/32.png"
-        loading="lazy"
-      />
-      Ho Ho Ho!
-      <img
-        data-emoji="🎄"
-        style="width: 20px; height: 20px"
-        alt="🎄"
-        aria-label="🎄"
-        draggable="false"
-        src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f384/32.png"
-        loading="lazy"
-      /><img
-        data-emoji="🎅"
-        style="width: 20px; height: 20px"
-        alt="🎅"
-        aria-label="🎅"
-        draggable="false"
-        src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f385/32.png"
-        loading="lazy"
-      />
-    </span>
-  </section>
-  <section style="margin-bottom: 10px">Hello there, {{ss_name}}!</section>
-  <section>
-    You've been chosen to spread some holiday cheer and sprinkle a little magic
-    this season.
-    <img
-      data-emoji="🎁"
-      style="width: 20px; height: 20px"
-      alt="🎁"
-      aria-label="🎁"
-      draggable="false"
-      src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f381/32.png"
-      loading="lazy"
-    /><img
-      data-emoji="✨"
-      style="width: 20px; height: 20px"
-      alt="✨"
-      aria-label="✨"
-      draggable="false"
-      src="https://fonts.gstatic.com/s/e/notoemoji/15.1/2728/32.png"
-      loading="lazy"
-    />
-  </section>
-  <section>
-    Your mission, should you choose to accept it (and we know you will!), is to
-    surprise your assigned giftee with a thoughtful present. Remember, it's not
-    about the size or cost of the gift, but the joy and warmth it brings.
-  </section>
-  <section style="margin-bottom: 10px">
-    Get ready to let your creativity shine! Whether it's a quirky gadget, a cozy
-    treat, or a heartfelt handmade creation, your gift is sure to make someone's
-    holiday season a little brighter.
-  </section>
-  <section style="margin-bottom: 10px">
-    You are assigned to get a gift for the following person:
-    <strong>{{ss_target}}</strong>
-  </section>
-  <section>
-    Happy gifting, and may the spirit of the season fill your heart with joy and
-    laughter!
-  </section>
-  <section style="margin-bottom: 10px">
-    With jingle bells and candy canes,
-  </section>
-  <section>
-    Your Secret Santa Organizer
-    <img
-      style="width: 20px; height: 20px"
-      data-emoji="🎅"
-      alt="🎅"
-      aria-label="🎅"
-      draggable="false"
-      src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f385/32.png"
-      loading="lazy"
-    /><img
-      style="width: 20px; height: 20px"
-      data-emoji="🎁"
-      alt="🎁"
-      aria-label="🎁"
-      draggable="false"
-      src="https://fonts.gstatic.com/s/e/notoemoji/15.1/1f381/32.png"
-      loading="lazy"
-    />
-  </section>
-</div>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Secret Santa Notification</title>
+  </head>
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    "
+  >
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px">
+      <div
+        style="
+          background-color: white;
+          padding: 40px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        "
+      >
+        <div style="text-align: center; margin-bottom: 30px">
+          <h1 style="color: #b91c1c; margin: 0">🎅🎄 Ho Ho Ho! 🎄🎅</h1>
+          <p style="color: #666; margin-top: 10px">Hello there, {{ss_name}}!</p>
+        </div>
+
+        <p style="margin-bottom: 20px">
+          You've been chosen to spread some holiday cheer and sprinkle a little
+          magic this season. 🎁✨
+        </p>
+
+        <p style="margin-bottom: 20px">
+          Your mission, should you choose to accept it (and we know you will!),
+          is to surprise your assigned giftee with a thoughtful present.
+          Remember, it's not about the size or cost of the gift, but the joy and
+          warmth it brings.
+        </p>
+
+        <p style="margin-bottom: 20px">
+          Get ready to let your creativity shine! Whether it's a quirky gadget,
+          a cozy treat, or a heartfelt handmade creation, your gift is sure to
+          make someone's holiday season a little brighter.
+        </p>
+
+        <div
+          style="
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #b91c1c;
+            margin: 30px 0;
+            border-radius: 4px;
+          "
+        >
+          <p style="margin: 0">
+            <strong
+              >🎁 You are assigned to get a gift for: {{ss_target}}</strong
+            >
+          </p>
+        </div>
+
+        <p style="margin-bottom: 20px">
+          Happy gifting, and may the spirit of the season fill your heart with
+          joy and laughter!
+        </p>
+
+        <p style="margin-bottom: 20px">With jingle bells and candy canes,</p>
+
+        <p style="text-align: center; margin: 0">
+          Your Secret Santa Organizer 🎅🎁
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
