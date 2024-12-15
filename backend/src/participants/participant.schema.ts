@@ -21,7 +21,7 @@ export class Participant {
 
   @Prop({ type: Object, default: null })
   preferences?: {
-    interests?: string[]; // e.g., ["Books", "Sports", "Cooking"]
+    interests?: string; // e.g., "Books, Sports, Cooking"
     sizes?: {
       clothing?: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'; // Standard clothing sizes
       shoe?:
@@ -37,13 +37,13 @@ export class Participant {
         | '45'; // Standard EU shoe sizes
       ring?: '5' | '6' | '7' | '8' | '9' | '10'; // Standard ring sizes
     };
-    wishlist?: string[]; // Specific items the participant wants
-    restrictions?: string[]; // e.g., ["No alcohol", "No peanuts"]
+    wishlist?: string; // Specific items the participant wants
+    restrictions?: string; // e.g., "No alcohol, No peanuts"
     ageGroup?: '18-25' | '26-35' | '36-45' | '46-55' | '56+'; // Defined groups
     gender?: 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say'; // Defined options
-    favoriteColors?: string[]; // e.g., ["Red", "Blue", "Green"]
-    dislikes?: string[]; // e.g., ["Socks", "Candles"]
-    hobbies?: string[]; // e.g., ["Cycling", "Painting", "Gardening"]
+    favoriteColors?: string; // e.g., "Red, Blue, Green"
+    dislikes?: string; // e.g., "Socks, Candles"
+    hobbies?: string; // e.g., "Cycling, Painting, Gardening"
   };
 }
 

@@ -4,14 +4,32 @@ export interface Participant {
   _id: string;
   name: string;
   email: string;
-  assignedTo?: string;
   session: string;
-  createdAt: string;
-  preferences?: {
+  assignedTo?: string;
+  preferences: {
     interests?: string;
-    sizes?: string;
+    sizes: {
+      clothing?: "XS" | "S" | "M" | "L" | "XL" | "XXL";
+      shoe?:
+        | "36"
+        | "37"
+        | "38"
+        | "39"
+        | "40"
+        | "41"
+        | "42"
+        | "43"
+        | "44"
+        | "45";
+      ring?: "5" | "6" | "7" | "8" | "9" | "10";
+    };
     wishlist?: string;
     restrictions?: string;
+    ageGroup?: "18-25" | "26-35" | "36-45" | "46-55" | "56+";
+    gender?: "Male" | "Female" | "Non-binary" | "Prefer not to say";
+    favoriteColors?: string;
+    dislikes?: string;
+    hobbies?: string;
   };
 }
 
@@ -60,12 +78,7 @@ class ParticipantService {
   async updatePreferences(
     sessionId: string,
     participantId: string,
-    preferences: {
-      interests?: string;
-      sizes?: string;
-      wishlist?: string;
-      restrictions?: string;
-    }
+    preferences: Participant["preferences"]
   ): Promise<Participant> {
     const response = await api.patch<Participant>(
       `/sessions/${sessionId}/participants/${participantId}/preferences`,
@@ -105,9 +118,18 @@ class ParticipantService {
     return (
       response.data.preferences || {
         interests: "",
-        sizes: "",
+        sizes: {
+          clothing: undefined,
+          shoe: undefined,
+          ring: undefined,
+        },
         wishlist: "",
         restrictions: "",
+        ageGroup: undefined,
+        gender: undefined,
+        favoriteColors: "",
+        dislikes: "",
+        hobbies: "",
       }
     );
   }

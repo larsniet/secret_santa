@@ -4,7 +4,11 @@ import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
 import { useAlert } from "../contexts/AlertContext";
 import { sessionService } from "../services/session.service";
-import { participantService } from "../services/participant.service";
+import {
+  Participant,
+  participantService,
+} from "../services/participant.service";
+import { Select } from "../components/common/Select";
 
 export const JoinSession: React.FC = () => {
   const { code } = useParams<{ code: string }>();
@@ -18,12 +22,22 @@ export const JoinSession: React.FC = () => {
   const [joinData, setJoinData] = useState({
     name: "",
     email: "",
+    gender: "",
   });
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<Participant["preferences"]>({
     interests: "",
-    sizes: "",
+    sizes: {
+      clothing: undefined,
+      shoe: undefined,
+      ring: undefined,
+    },
     wishlist: "",
     restrictions: "",
+    ageGroup: undefined,
+    gender: undefined,
+    favoriteColors: "",
+    dislikes: "",
+    hobbies: "",
   });
 
   const loadSession = useCallback(async () => {
@@ -158,6 +172,20 @@ export const JoinSession: React.FC = () => {
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
         />
       </div>
+      <div>
+        <Select
+          label="Gender"
+          value={joinData.gender}
+          onChange={(e) => setJoinData({ ...joinData, gender: e.target.value })}
+          required
+          options={[
+            { value: "Male", label: "Male" },
+            { value: "Female", label: "Female" },
+            { value: "Non-binary", label: "Non-binary" },
+            { value: "Prefer not to say", label: "Prefer not to say" },
+          ]}
+        />
+      </div>
       <Button type="submit" isLoading={isLoading} className="w-full">
         Join Secret Santa
       </Button>
@@ -172,7 +200,7 @@ export const JoinSession: React.FC = () => {
         </label>
         <input
           type="text"
-          value={preferences.interests}
+          value={preferences?.interests}
           onChange={(e) =>
             setPreferences({ ...preferences, interests: e.target.value })
           }
@@ -181,17 +209,79 @@ export const JoinSession: React.FC = () => {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          Sizes (optional)
-        </label>
-        <input
-          type="text"
-          value={preferences.sizes}
+        <Select
+          label="Clothing Size (optional)"
+          value={preferences?.sizes?.clothing || ""}
           onChange={(e) =>
-            setPreferences({ ...preferences, sizes: e.target.value })
+            setPreferences({
+              ...preferences,
+              sizes: {
+                ...preferences?.sizes,
+                clothing: e.target
+                  .value as Participant["preferences"]["sizes"]["clothing"],
+              },
+            })
           }
-          placeholder="e.g., M for clothes, 9 for shoes"
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+          options={[
+            { value: "XS", label: "XS" },
+            { value: "S", label: "S" },
+            { value: "M", label: "M" },
+            { value: "L", label: "L" },
+            { value: "XL", label: "XL" },
+            { value: "XXL", label: "XXL" },
+          ]}
+        />
+      </div>
+      <div>
+        <Select
+          label="Shoe Size (optional)"
+          value={preferences?.sizes?.shoe || ""}
+          onChange={(e) =>
+            setPreferences({
+              ...preferences,
+              sizes: {
+                ...preferences?.sizes,
+                shoe: e.target
+                  .value as Participant["preferences"]["sizes"]["shoe"],
+              },
+            })
+          }
+          options={[
+            { value: "36", label: "36" },
+            { value: "37", label: "37" },
+            { value: "38", label: "38" },
+            { value: "39", label: "39" },
+            { value: "40", label: "40" },
+            { value: "41", label: "41" },
+            { value: "42", label: "42" },
+            { value: "43", label: "43" },
+            { value: "44", label: "44" },
+            { value: "45", label: "45" },
+          ]}
+        />
+      </div>
+      <div>
+        <Select
+          label="Ring Size (optional)"
+          value={preferences?.sizes?.ring || ""}
+          onChange={(e) =>
+            setPreferences({
+              ...preferences,
+              sizes: {
+                ...preferences?.sizes,
+                ring: e.target
+                  .value as Participant["preferences"]["sizes"]["ring"],
+              },
+            })
+          }
+          options={[
+            { value: "5", label: "5" },
+            { value: "6", label: "6" },
+            { value: "7", label: "7" },
+            { value: "8", label: "8" },
+            { value: "9", label: "9" },
+            { value: "10", label: "10" },
+          ]}
         />
       </div>
       <div>
@@ -199,7 +289,7 @@ export const JoinSession: React.FC = () => {
           Wishlist (optional)
         </label>
         <textarea
-          value={preferences.wishlist}
+          value={preferences?.wishlist}
           onChange={(e) =>
             setPreferences({ ...preferences, wishlist: e.target.value })
           }
@@ -214,7 +304,7 @@ export const JoinSession: React.FC = () => {
         </label>
         <input
           type="text"
-          value={preferences.restrictions}
+          value={preferences?.restrictions}
           onChange={(e) =>
             setPreferences({ ...preferences, restrictions: e.target.value })
           }

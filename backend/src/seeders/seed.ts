@@ -29,7 +29,7 @@ async function seed() {
   });
 
   // Create unverified test user
-  const testUser = await userModel.create({
+  await userModel.create({
     name: 'Test User',
     email: 'test@test.com',
     password: hashedPassword,
@@ -66,9 +66,18 @@ async function seed() {
       email: 'john@example.com',
       preferences: {
         interests: 'Books, hiking, and photography',
-        sizes: 'L for shirts, 32/34 for pants',
+        sizes: {
+          clothing: 'L',
+          shoe: '42',
+          ring: '9',
+        },
         wishlist: 'A new camera lens or hiking boots',
         restrictions: 'No food items please',
+        ageGroup: '26-35',
+        gender: 'Male',
+        favoriteColors: 'Blue, Green',
+        dislikes: 'Socks',
+        hobbies: 'Cycling, Painting',
       },
     },
     {
@@ -76,9 +85,18 @@ async function seed() {
       email: 'jane@example.com',
       preferences: {
         interests: 'Cooking, gardening, and yoga',
-        sizes: 'M for tops, 8 for dresses',
+        sizes: {
+          clothing: 'M',
+          shoe: '38',
+          ring: '7',
+        },
         wishlist: 'Kitchen gadgets or yoga accessories',
         restrictions: 'No scented items',
+        ageGroup: '36-45',
+        gender: 'Female',
+        favoriteColors: 'Red, Yellow',
+        dislikes: 'Candles',
+        hobbies: 'Gardening, Yoga',
       },
     },
     { name: 'Bob Wilson', email: 'bob@example.com' },
@@ -87,9 +105,18 @@ async function seed() {
       email: 'alice@example.com',
       preferences: {
         interests: 'Art, music, and travel',
-        sizes: 'S for clothing',
+        sizes: {
+          clothing: 'S',
+          shoe: '37',
+          ring: '6',
+        },
         wishlist: 'Art supplies or travel accessories',
         restrictions: 'None',
+        ageGroup: '18-25',
+        gender: 'Female',
+        favoriteColors: 'Purple, Pink',
+        dislikes: 'None',
+        hobbies: 'Traveling, Music',
       },
     },
     { name: 'Charlie Davis', email: 'charlie@example.com' },

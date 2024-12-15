@@ -56,7 +56,7 @@ export class ParticipantsController {
   async updatePreferences(
     @Param('sessionId') sessionId: string,
     @Param('participantId') participantId: string,
-    @Body('preferences') preferences: Participant['preferences'],
+    @Body() preferences: Participant['preferences'],
   ): Promise<Participant> {
     return this.participantsService.updatePreferences(
       sessionId,

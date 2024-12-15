@@ -14,6 +14,7 @@ import { PLAN_LIMITS, EventPlan } from "../types/plans";
 import { stripePromise } from "../lib/stripe";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { StatusBadge } from "../components/common/StatusBadge";
+import { Select } from "../components/common/Select";
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,16 +32,23 @@ export const SessionDetail: React.FC = () => {
   const [editingPreferences, setEditingPreferences] = useState<string | null>(
     null
   );
-  const [preferences, setPreferences] = useState<{
-    interests?: string;
-    sizes?: string;
-    wishlist?: string;
-    restrictions?: string;
-  }>({
+
+  const [preferences, setPreferences] = useState<
+    Participant["preferences"] | undefined
+  >({
     interests: "",
-    sizes: "",
+    sizes: {
+      clothing: undefined,
+      shoe: undefined,
+      ring: undefined,
+    },
     wishlist: "",
     restrictions: "",
+    ageGroup: undefined,
+    gender: undefined,
+    favoriteColors: "",
+    dislikes: "",
+    hobbies: "",
   });
   const [selectedPlan, setSelectedPlan] = useState<EventPlan | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -215,7 +223,7 @@ export const SessionDetail: React.FC = () => {
   };
 
   const handleUpdatePreferences = async (participantId: string) => {
-    if (!session) return;
+    if (!session || !preferences) return;
 
     try {
       setIsSubmitting(true);
@@ -243,12 +251,7 @@ export const SessionDetail: React.FC = () => {
 
   const startEditingPreferences = (participant: Participant) => {
     setEditingPreferences(participant._id);
-    setPreferences({
-      interests: participant.preferences?.interests || "",
-      sizes: participant.preferences?.sizes || "",
-      wishlist: participant.preferences?.wishlist || "",
-      restrictions: participant.preferences?.restrictions || "",
-    });
+    setPreferences(participant.preferences);
   };
 
   const handleNameSave = async () => {
@@ -721,32 +724,94 @@ export const SessionDetail: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={preferences.interests || ""}
+                    value={preferences?.interests || ""}
                     onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        interests: e.target.value,
-                      })
+                      setPreferences(
+                        (prevPreferences) =>
+                          ({
+                            ...prevPreferences,
+                            interests: e.target.value || undefined,
+                          } as Participant["preferences"])
+                      )
                     }
                     placeholder="e.g., Reading, Cooking, Sports"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Sizes (optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={preferences.sizes || ""}
+                  <Select
+                    label="Clothing Size (optional)"
+                    value={preferences?.sizes?.clothing || ""}
                     onChange={(e) =>
                       setPreferences({
                         ...preferences,
-                        sizes: e.target.value,
+                        sizes: {
+                          ...preferences?.sizes,
+                          clothing: e.target
+                            .value as Participant["preferences"]["sizes"]["clothing"],
+                        },
                       })
                     }
-                    placeholder="e.g., M for clothes, 9 for shoes"
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                    options={[
+                      { value: "XS", label: "XS" },
+                      { value: "S", label: "S" },
+                      { value: "M", label: "M" },
+                      { value: "L", label: "L" },
+                      { value: "XL", label: "XL" },
+                      { value: "XXL", label: "XXL" },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <Select
+                    label="Shoe Size (optional)"
+                    value={preferences?.sizes?.shoe || ""}
+                    onChange={(e) =>
+                      setPreferences({
+                        ...preferences,
+                        sizes: {
+                          ...preferences?.sizes,
+                          shoe: e.target.value as
+                            | Participant["preferences"]["sizes"]["shoe"],
+                        },
+                      })
+                    }
+                    options={[
+                      { value: "36", label: "36" },
+                      { value: "37", label: "37" },
+                      { value: "38", label: "38" },
+                      { value: "39", label: "39" },
+                      { value: "40", label: "40" },
+                      { value: "41", label: "41" },
+                      { value: "42", label: "42" },
+                      { value: "43", label: "43" },
+                      { value: "44", label: "44" },
+                      { value: "45", label: "45" },
+                    ]}
+                  />
+                </div>
+                <div>
+                  <Select
+                    label="Ring Size (optional)"
+                    value={preferences?.sizes?.ring || ""}
+                    onChange={(e) =>
+                      setPreferences({
+                        ...preferences,
+                        sizes: {
+                          ...preferences?.sizes,
+                          ring: e.target
+                            .value as Participant["preferences"]["sizes"]["ring"],
+                        },
+                      })
+                    }
+                    options={[
+                      { value: "5", label: "5" },
+                      { value: "6", label: "6" },
+                      { value: "7", label: "7" },
+                      { value: "8", label: "8" },
+                      { value: "9", label: "9" },
+                      { value: "10", label: "10" },
+                    ]}
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -754,12 +819,15 @@ export const SessionDetail: React.FC = () => {
                     Wishlist (optional)
                   </label>
                   <textarea
-                    value={preferences.wishlist || ""}
+                    value={preferences?.wishlist || ""}
                     onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        wishlist: e.target.value,
-                      })
+                      setPreferences(
+                        (prevPreferences) =>
+                          ({
+                            ...prevPreferences,
+                            wishlist: e.target.value || undefined,
+                          } as Participant["preferences"])
+                      )
                     }
                     placeholder="List any specific items you'd like"
                     rows={3}
@@ -772,15 +840,66 @@ export const SessionDetail: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={preferences.restrictions || ""}
+                    value={preferences?.restrictions || ""}
                     onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        restrictions: e.target.value,
-                      })
+                      setPreferences(
+                        (prevPreferences) =>
+                          ({
+                            ...prevPreferences,
+                            restrictions: e.target.value || undefined,
+                          } as Participant["preferences"])
+                      )
                     }
                     placeholder="e.g., No food items, allergies"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Select
+                    label="Age Group (optional)"
+                    value={preferences?.ageGroup || ""}
+                    onChange={(e) =>
+                      setPreferences(
+                        (prevPreferences) =>
+                          ({
+                            ...prevPreferences,
+                            ageGroup: e.target
+                              .value as Participant["preferences"]["ageGroup"],
+                          } as Participant["preferences"])
+                      )
+                    }
+                    options={[
+                      { value: "18-25", label: "18-25" },
+                      { value: "26-35", label: "26-35" },
+                      { value: "36-45", label: "36-45" },
+                      { value: "46-55", label: "46-55" },
+                      { value: "56+", label: "56+" },
+                    ]}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Select
+                    label="Gender (optional)"
+                    value={preferences?.gender || ""}
+                    onChange={(e) =>
+                      setPreferences(
+                        (prevPreferences) =>
+                          ({
+                            ...prevPreferences,
+                            gender: e.target
+                              .value as Participant["preferences"]["gender"],
+                          } as Participant["preferences"])
+                      )
+                    }
+                    options={[
+                      { value: "Male", label: "Male" },
+                      { value: "Female", label: "Female" },
+                      { value: "Non-binary", label: "Non-binary" },
+                      {
+                        value: "Prefer not to say",
+                        label: "Prefer not to say",
+                      },
+                    ]}
                   />
                 </div>
               </div>
