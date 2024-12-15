@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { Participant } from '../participants/participant.schema';
 
 @Injectable()
 export class EmailService {
@@ -74,20 +75,82 @@ export class EmailService {
   }
 
   async sendAssignmentEmail(
-    participant: { name: string; email: string },
+    participant: Participant,
     recipientName: string,
   ): Promise<void> {
     try {
       const template = await this.getEmailTemplate('email_template');
+
+      const preferences = participant.preferences
+        ? `
+        ${
+          participant.preferences.interests
+            ? `<li><strong>Interests:</strong> ${participant.preferences.interests}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.sizes?.clothing
+            ? `<li><strong>Clothing Size:</strong> ${participant.preferences.sizes.clothing}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.sizes?.shoe
+            ? `<li><strong>Shoe Size:</strong> ${participant.preferences.sizes.shoe}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.sizes?.ring
+            ? `<li><strong>Ring Size:</strong> ${participant.preferences.sizes.ring}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.wishlist
+            ? `<li><strong>Wishlist:</strong> ${participant.preferences.wishlist}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.restrictions
+            ? `<li><strong>Restrictions:</strong> ${participant.preferences.restrictions}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.ageGroup
+            ? `<li><strong>Age Group:</strong> ${participant.preferences.ageGroup}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.gender
+            ? `<li><strong>Gender:</strong> ${participant.preferences.gender}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.favoriteColors
+            ? `<li><strong>Favorite Colors:</strong> ${participant.preferences.favoriteColors}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.dislikes
+            ? `<li><strong>Dislikes:</strong> ${participant.preferences.dislikes}</li>`
+            : ''
+        }
+        ${
+          participant.preferences.hobbies
+            ? `<li><strong>Hobbies:</strong> ${participant.preferences.hobbies}</li>`
+            : ''
+        }
+      `
+        : '<li>No preferences provided.</li>';
+
       const html = template
         .replace(/{{ss_name}}/g, participant.name)
-        .replace(/{{ss_target}}/g, recipientName);
+        .replace(/{{ss_target}}/g, recipientName)
+        .replace(/{{ss_preferences}}/g, preferences);
 
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
         to: participant.email,
         subject: 'Your Secret Santa Assignment! 🎄',
-        html: html,
+        html,
       });
 
       console.log(`Email sent to ${participant.email}`);
