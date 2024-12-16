@@ -26,6 +26,11 @@ export const SessionDetail: React.FC = () => {
     name: "",
     email: "",
   });
+  const [isStartSessionLoading, setIsStartSessionLoading] = useState(false);
+  const [isDeleteSessionLoading, setIsDeleteSessionLoading] = useState(false);
+  const [loadingParticipantIds, setLoadingParticipantIds] = useState<string[]>(
+    []
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
@@ -138,7 +143,7 @@ export const SessionDetail: React.FC = () => {
     if (!session) return;
 
     try {
-      setIsSubmitting(true);
+      setIsStartSessionLoading(true);
       await participantService.createAssignments(session._id);
       showAlert("success", "Secret Santa assignments have been sent!");
       navigate("/dashboard");
@@ -149,7 +154,7 @@ export const SessionDetail: React.FC = () => {
           "Failed to create Secret Santa assignments"
       );
     } finally {
-      setIsSubmitting(false);
+      setIsStartSessionLoading(false);
     }
   };
 
@@ -157,7 +162,7 @@ export const SessionDetail: React.FC = () => {
     if (!session || session.status === "completed") return;
 
     try {
-      setIsSubmitting(true);
+      setIsDeleteSessionLoading(true);
       await sessionService.deleteSession(session._id);
       navigate("/dashboard");
       showAlert("success", "Session deleted successfully");
@@ -167,7 +172,7 @@ export const SessionDetail: React.FC = () => {
         err.response?.data?.message || "Failed to delete session"
       );
     } finally {
-      setIsSubmitting(false);
+      setIsDeleteSessionLoading(false);
     }
   };
 
@@ -175,7 +180,7 @@ export const SessionDetail: React.FC = () => {
     if (!session) return;
 
     try {
-      setIsSubmitting(true);
+      setLoadingParticipantIds((prev) => [...prev, participantId]); // Add the ID to the loading list
       await participantService.deleteParticipant(session._id, participantId);
       setParticipants(participants.filter((p) => p._id !== participantId));
       showAlert("success", "Participant removed successfully!");
@@ -185,7 +190,9 @@ export const SessionDetail: React.FC = () => {
         err.response?.data?.message || "Failed to remove participant"
       );
     } finally {
-      setIsSubmitting(false);
+      setLoadingParticipantIds((prev) =>
+        prev.filter((id) => id !== participantId)
+      ); // Remove the ID from the loading list
     }
   };
 
@@ -293,7 +300,7 @@ export const SessionDetail: React.FC = () => {
 
   return (
     <Layout>
-      <BackButton />
+      <BackButton navigateTo="/dashboard" />
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
@@ -340,7 +347,7 @@ export const SessionDetail: React.FC = () => {
               <Button
                 variant="danger"
                 onClick={() => setDeleteModalOpen(true)}
-                isLoading={isSubmitting}
+                isLoading={isDeleteSessionLoading}
               >
                 Delete Session
               </Button>
@@ -636,7 +643,7 @@ export const SessionDetail: React.FC = () => {
                   {session.status === "active" && participants.length >= 2 && (
                     <Button
                       onClick={handleStartSession}
-                      isLoading={isSubmitting}
+                      isLoading={isStartSessionLoading}
                     >
                       Start Secret Santa
                     </Button>
@@ -695,7 +702,9 @@ export const SessionDetail: React.FC = () => {
                             onClick={() =>
                               setDeleteParticipantId(participant._id)
                             }
-                            isLoading={isSubmitting}
+                            isLoading={loadingParticipantIds.includes(
+                              participant._id
+                            )}
                           >
                             Remove
                           </Button>

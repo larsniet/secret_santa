@@ -39,6 +39,13 @@ export class AssignmentsService {
       );
     }
 
+    // Update session status
+    await this.sessionsService.updateSessionStatus(
+      sessionId,
+      userId,
+      SessionStatus.COMPLETED,
+    );
+
     const shuffled = [...participants].sort(() => Math.random() - 0.5);
     const assignments = [];
     const emailPromises = [];
@@ -70,13 +77,6 @@ export class AssignmentsService {
 
     // Wait for all emails to be sent
     await Promise.all(emailPromises);
-
-    // Update session status
-    await this.sessionsService.updateSessionStatus(
-      sessionId,
-      userId,
-      SessionStatus.COMPLETED,
-    );
 
     return assignments;
   }

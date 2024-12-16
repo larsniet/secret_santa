@@ -1,12 +1,35 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-export const BackButton: React.FC = () => {
+export const BackButton: React.FC<{ navigateTo?: string }> = ({
+  navigateTo,
+}) => {
   const navigate = useNavigate();
+
+  const handleBackClick = () => {
+    if (navigateTo) {
+      navigate(navigateTo);
+      return;
+    }
+
+    const isExternalReferrer: boolean =
+      document.referrer &&
+      new URL(document.referrer).origin.includes(
+        process.env.REACT_APP_API_URL || "http://localhost:5001/api"
+      )
+        ? false
+        : true;
+
+    if (isExternalReferrer || window.history.length <= 1) {
+      navigate("/dashboard");
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <button
-      onClick={() => navigate(-1)}
+      onClick={handleBackClick}
       className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
     >
       <svg

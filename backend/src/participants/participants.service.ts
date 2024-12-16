@@ -67,12 +67,21 @@ export class ParticipantsService {
       );
     }
 
+    // Create a new participant
     const participant = new this.participantModel({
       name: participantData.name,
       email: participantData.email,
       session: new Types.ObjectId(participantData.sessionId),
     });
-    return participant.save();
+    const savedParticipant = await participant.save();
+
+    // Update the session's participants array
+    await this.sessionsService.addParticipantToSession(
+      participantData.sessionId,
+      savedParticipant._id.toString(),
+    );
+
+    return savedParticipant;
   }
 
   async deleteAllFromSession(sessionId: string): Promise<void> {

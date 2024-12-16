@@ -79,72 +79,95 @@ export class EmailService {
     recipientName: string,
   ): Promise<void> {
     try {
-      const template = await this.getEmailTemplate('email_template');
+      const template = await this.getEmailTemplate('secret_santa_invite');
 
-      const preferences = participant.preferences
-        ? `
-        ${
-          participant.preferences.interests
-            ? `<li><strong>Interests:</strong> ${participant.preferences.interests}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.sizes?.clothing
-            ? `<li><strong>Clothing Size:</strong> ${participant.preferences.sizes.clothing}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.sizes?.shoe
-            ? `<li><strong>Shoe Size:</strong> ${participant.preferences.sizes.shoe}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.sizes?.ring
-            ? `<li><strong>Ring Size:</strong> ${participant.preferences.sizes.ring}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.wishlist
-            ? `<li><strong>Wishlist:</strong> ${participant.preferences.wishlist}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.restrictions
-            ? `<li><strong>Restrictions:</strong> ${participant.preferences.restrictions}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.ageGroup
-            ? `<li><strong>Age Group:</strong> ${participant.preferences.ageGroup}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.gender
-            ? `<li><strong>Gender:</strong> ${participant.preferences.gender}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.favoriteColors
-            ? `<li><strong>Favorite Colors:</strong> ${participant.preferences.favoriteColors}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.dislikes
-            ? `<li><strong>Dislikes:</strong> ${participant.preferences.dislikes}</li>`
-            : ''
-        }
-        ${
-          participant.preferences.hobbies
-            ? `<li><strong>Hobbies:</strong> ${participant.preferences.hobbies}</li>`
-            : ''
-        }
-      `
-        : '<li>No preferences provided.</li>';
+      let preferencesBlock = '';
+
+      if (
+        participant.preferences &&
+        Object.values(participant.preferences).some(Boolean)
+      ) {
+        const preferences = `
+          ${
+            participant.preferences.interests
+              ? `<li><strong>Interests:</strong> ${participant.preferences.interests}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.sizes?.clothing
+              ? `<li><strong>Clothing Size:</strong> ${participant.preferences.sizes.clothing}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.sizes?.shoe
+              ? `<li><strong>Shoe Size:</strong> ${participant.preferences.sizes.shoe}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.sizes?.ring
+              ? `<li><strong>Ring Size:</strong> ${participant.preferences.sizes.ring}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.wishlist
+              ? `<li><strong>Wishlist:</strong> ${participant.preferences.wishlist}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.restrictions
+              ? `<li><strong>Restrictions:</strong> ${participant.preferences.restrictions}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.ageGroup
+              ? `<li><strong>Age Group:</strong> ${participant.preferences.ageGroup}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.gender
+              ? `<li><strong>Gender:</strong> ${participant.preferences.gender}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.favoriteColors
+              ? `<li><strong>Favorite Colors:</strong> ${participant.preferences.favoriteColors}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.dislikes
+              ? `<li><strong>Dislikes:</strong> ${participant.preferences.dislikes}</li>`
+              : ''
+          }
+          ${
+            participant.preferences.hobbies
+              ? `<li><strong>Hobbies:</strong> ${participant.preferences.hobbies}</li>`
+              : ''
+          }
+        `;
+        preferencesBlock = `
+          <div
+            style="
+              background-color: #f9f9f9;
+              padding: 15px;
+              border-left: 4px solid #b91c1c;
+              margin: 30px 20px;
+              border-radius: 4px;
+            "
+          >
+            <p style="margin: 0; font-weight: bold; color: #b91c1c">
+              These are the preferences of your assigned giftee:
+            </p>
+            <ul style="margin: 10px 0; padding-left: 20px; color: #333">
+              ${preferences}
+            </ul>
+          </div>
+        `;
+      }
 
       const html = template
         .replace(/{{ss_name}}/g, participant.name)
         .replace(/{{ss_target}}/g, recipientName)
-        .replace(/{{ss_preferences}}/g, preferences);
+        .replace(/{{ss_preferences_block}}/g, preferencesBlock);
 
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),

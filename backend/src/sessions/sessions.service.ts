@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Session, SessionStatus } from './session.schema';
 import { EventPlan } from '../users/user.schema';
 
@@ -132,6 +132,20 @@ export class SessionsService {
         status: SessionStatus.ACTIVE,
       })
       .exec();
+  }
+
+  async addParticipantToSession(
+    sessionId: string,
+    participantId: string,
+  ): Promise<void> {
+    const session = await this.sessionModel.findById(sessionId).exec();
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    session.participants.push(new Types.ObjectId(participantId));
+    await session.save();
   }
 
   async updateSession(
