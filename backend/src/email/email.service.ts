@@ -186,25 +186,9 @@ export class EmailService {
   async sendApologyEmail(): Promise<void> {
     const baseUrl =
       'https://plansecretsanta.com/sessions/67604f09f82066919c2a7557/participants/';
-    const recipients = [
-      {
-        name: 'Andrew',
-        email: 'larsvanderniet@gmail.com',
-        updatePreferencesLink: baseUrl + '67605c6cd27f3841310a7ad3',
-      },
-      {
-        name: 'Gino',
-        email: 'larsvanderniet@gmail.com',
-        updatePreferencesLink: baseUrl + '67605c7bd27f3841310a7ad9',
-      },
-      {
-        name: 'Darian',
-        email: 'larsvanderniet@gmail.com',
-        updatePreferencesLink: baseUrl + '67605cead27f3841310a7b02',
-      },
-    ];
+    const recipients = [];
 
-    const template = await this.getEmailTemplate('test');
+    const template = await this.getEmailTemplate('apology_email');
 
     for (const recipient of recipients) {
       try {
