@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { BackButton } from "../components/common/BackButton";
 import { useAlert } from "../contexts/AlertContext";
@@ -7,14 +7,17 @@ import { participantService } from "../services/participant.service";
 import { Loading } from "../components/common/Loading";
 import { Participant } from "../services/participant.service";
 import { Select } from "../components/common/Select";
+import { Button } from "../components/common/Button";
 
 export const ParticipantPreferences: React.FC = () => {
   const { sessionId, participantId } = useParams<{
     sessionId: string;
     participantId: string;
   }>();
+  const navigate = useNavigate();
   const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [preferences, setPreferences] = useState<Participant["preferences"]>({
     interests: "",
     sizes: {
@@ -59,26 +62,27 @@ export const ParticipantPreferences: React.FC = () => {
     if (!sessionId || !participantId) return;
 
     try {
+      setIsSubmitting(true);
       await participantService.updatePreferences(
         sessionId,
         participantId,
         preferences
       );
       showAlert("success", "Preferences saved successfully!");
-      setTimeout(() => {
-        window.location.href = `/join/${sessionId}`;
-      }, 2000);
+      navigate(`/join/${sessionId}`);
     } catch (err: any) {
       showAlert(
         "error",
         err.response?.data?.message || "Failed to update preferences"
       );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
     return (
-      <Layout isLoading>
+      <Layout>
         <Loading />
       </Layout>
     );
@@ -86,12 +90,20 @@ export const ParticipantPreferences: React.FC = () => {
 
   return (
     <Layout>
-      <BackButton />
-      <div className="max-w-2xl mx-auto">
-        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Update Your Gift Preferences
-          </h2>
+      <BackButton
+        navigateTo={`/sessions/${sessionId}/participants/${participantId}`}
+      />
+      <div className="space-y-6">
+        <header className="bg-white shadow p-6 rounded-lg">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Update Gift Preferences
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Customize your preferences to help your Secret Santa find the
+            perfect gift.
+          </p>
+        </header>
+        <div className="bg-white p-6 rounded-lg shadow">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -111,7 +123,7 @@ export const ParticipantPreferences: React.FC = () => {
               />
             </div>
 
-            <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label="Clothing Size"
                 value={preferences?.sizes?.clothing || ""}
@@ -134,9 +146,6 @@ export const ParticipantPreferences: React.FC = () => {
                   { value: "XXL", label: "XXL" },
                 ]}
               />
-            </div>
-
-            <div>
               <Select
                 label="Shoe Size"
                 value={preferences?.sizes?.shoe || ""}
@@ -163,9 +172,6 @@ export const ParticipantPreferences: React.FC = () => {
                   { value: "45", label: "45" },
                 ]}
               />
-            </div>
-
-            <div>
               <Select
                 label="Ring Size"
                 value={preferences?.sizes?.ring || ""}
@@ -186,6 +192,24 @@ export const ParticipantPreferences: React.FC = () => {
                   { value: "8", label: "8" },
                   { value: "9", label: "9" },
                   { value: "10", label: "10" },
+                ]}
+              />
+              <Select
+                label="Age Group"
+                value={preferences?.ageGroup || ""}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    ageGroup: e.target
+                      .value as Participant["preferences"]["ageGroup"],
+                  })
+                }
+                options={[
+                  { value: "18-25", label: "18-25" },
+                  { value: "26-35", label: "26-35" },
+                  { value: "36-45", label: "36-45" },
+                  { value: "46-55", label: "46-55" },
+                  { value: "56+", label: "56+" },
                 ]}
               />
             </div>
@@ -226,53 +250,9 @@ export const ParticipantPreferences: React.FC = () => {
               />
             </div>
 
-            <div>
-              <Select
-                label="Age Group"
-                value={preferences?.ageGroup || ""}
-                onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    ageGroup: e.target
-                      .value as Participant["preferences"]["ageGroup"],
-                  })
-                }
-                options={[
-                  { value: "18-25", label: "18-25" },
-                  { value: "26-35", label: "26-35" },
-                  { value: "36-45", label: "36-45" },
-                  { value: "46-55", label: "46-55" },
-                  { value: "56+", label: "56+" },
-                ]}
-              />
-            </div>
-
-            <div>
-              <Select
-                label="Gender"
-                value={preferences?.gender || ""}
-                onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    gender: e.target
-                      .value as Participant["preferences"]["gender"],
-                  })
-                }
-                options={[
-                  { value: "Male", label: "Male" },
-                  { value: "Female", label: "Female" },
-                  { value: "Non-binary", label: "Non-binary" },
-                  { value: "Prefer not to say", label: "Prefer not to say" },
-                ]}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#B91C1C] hover:bg-[#991B1B] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B91C1C]"
-            >
+            <Button type="submit" isLoading={isSubmitting} className="w-full">
               Save Preferences
-            </button>
+            </Button>
           </form>
         </div>
       </div>

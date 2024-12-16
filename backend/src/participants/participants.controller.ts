@@ -65,11 +65,30 @@ export class ParticipantsController {
     );
   }
 
+  @Post(':participantId/products')
+  async getMatchingProducts(
+    @Param('sessionId') sessionId: string,
+    @Param('participantId') participantId: string,
+    @Body() body: { page: number },
+  ): Promise<any[]> {
+    const { page } = body;
+    return this.participantsService.getMatchingProducts(
+      sessionId,
+      participantId,
+      page,
+    );
+  }
+
   @Get(':participantId')
   async getParticipant(
     @Param('sessionId') sessionId: string,
     @Param('participantId') participantId: string,
   ): Promise<Participant> {
-    return this.participantsService.findParticipant(sessionId, participantId);
+    const participant = await this.participantsService.findParticipant(
+      sessionId,
+      participantId,
+    );
+
+    return participant;
   }
 }

@@ -11,6 +11,7 @@ import { JoinSession } from "./pages/JoinSession";
 import { ParticipantPreferences } from "./pages/ParticipantPreferences";
 import { VerifyHandler } from "./components/auth/VerifyHandler";
 import { UserSettings } from "./pages/UserSettings";
+import ParticipantDashboard from "./pages/ParticipantDashboard";
 
 function App() {
   return (
@@ -47,6 +48,10 @@ function App() {
               }
             />
             <Route path="/join/:code" element={<JoinSession />} />
+            <Route
+              path="/sessions/:sessionId/participants/:participantId"
+              element={<ParticipantDashboard />}
+            />
             <Route
               path="/sessions/:sessionId/participants/:participantId/preferences"
               element={<ParticipantPreferences />}

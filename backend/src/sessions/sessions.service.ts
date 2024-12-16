@@ -148,6 +148,17 @@ export class SessionsService {
     await session.save();
   }
 
+  async removeParticipantFromSession(
+    sessionId: string,
+    participantId: string,
+  ): Promise<void> {
+    const session = await this.sessionModel.findById(sessionId).exec();
+    session.participants = session.participants.filter(
+      (id) => id.toString() !== participantId,
+    );
+    await session.save();
+  }
+
   async updateSession(
     sessionId: string,
     userId: string,

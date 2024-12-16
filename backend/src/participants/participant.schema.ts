@@ -16,8 +16,8 @@ export class Participant {
   @Prop({ type: Types.ObjectId, ref: 'Session', required: true })
   session: Types.ObjectId;
 
-  @Prop()
-  assignedTo?: string;
+  @Prop({ type: Types.ObjectId, ref: 'Participant' })
+  assignedTo?: Types.ObjectId;
 
   @Prop({ type: Object, default: null })
   preferences?: {

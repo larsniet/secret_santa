@@ -672,7 +672,7 @@ export const SessionDetail: React.FC = () => {
                         {session.status === "completed" &&
                           participant.assignedTo && (
                             <p className="mt-2 text-sm text-[#B91C1C]">
-                              Assigned to: {participant.assignedTo}
+                              Assigned to: {participant.assignedTo.name}
                             </p>
                           )}
                         {participant.preferences &&

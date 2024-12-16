@@ -5,7 +5,7 @@ export interface Participant {
   name: string;
   email: string;
   session: string;
-  assignedTo?: string;
+  assignedTo?: Participant;
   preferences: {
     interests?: string;
     sizes: {
@@ -87,7 +87,7 @@ class ParticipantService {
     return response.data;
   }
 
-  async getParticipantPreferences(
+  async getParticipant(
     sessionId: string,
     participantId: string
   ): Promise<Participant> {
@@ -132,6 +132,18 @@ class ParticipantService {
         hobbies: "",
       }
     );
+  }
+
+  async getMatchingProducts(
+    sessionId: string,
+    assignedParticipantId?: string,
+    page?: number
+  ): Promise<any[]> {
+    const response = await api.post(
+      `/sessions/${sessionId}/participants/${assignedParticipantId}/products`,
+      { page }
+    );
+    return response.data;
   }
 }
 
