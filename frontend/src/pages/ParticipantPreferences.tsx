@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { BackButton } from "../components/common/BackButton";
 import { useAlert } from "../contexts/AlertContext";
@@ -14,7 +14,6 @@ export const ParticipantPreferences: React.FC = () => {
     sessionId: string;
     participantId: string;
   }>();
-  const navigate = useNavigate();
   const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,7 +68,6 @@ export const ParticipantPreferences: React.FC = () => {
         preferences
       );
       showAlert("success", "Preferences saved successfully!");
-      navigate(`/join/${sessionId}`);
     } catch (err: any) {
       showAlert(
         "error",

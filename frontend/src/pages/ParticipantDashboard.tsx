@@ -132,11 +132,11 @@ const ParticipantDashboard: React.FC = () => {
         </div>
 
         {/* Preferences Section */}
-        {assignedParticipant?.preferences ? (
-          <div className="bg-white p-6 rounded-lg shadow space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Preferences for {assignedParticipant?.name}
-            </h2>
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Preferences for {assignedParticipant?.name}
+          </h2>
+          {assignedParticipant?.preferences ? (
             <ul className="space-y-2">
               {Object.entries(assignedParticipant.preferences).map(
                 ([key, value]) => {
@@ -169,11 +169,13 @@ const ParticipantDashboard: React.FC = () => {
                 }
               )}
             </ul>
-          </div>
-        ) : null}
+          ) : (
+            <p className="text-sm text-gray-500">No preferences set yet.</p>
+          )}
+        </div>
 
         {/* Products Section */}
-        <div className="bg-white p-6 rounded-lg shadow space-y-4">
+        {/* <div className="bg-white p-6 rounded-lg shadow space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">
             Gift Suggestions
           </h2>
@@ -192,7 +194,7 @@ const ParticipantDashboard: React.FC = () => {
               </Button>
             </div>
           )}
-        </div>
+        </div> */}
       </div>
     </Layout>
   );

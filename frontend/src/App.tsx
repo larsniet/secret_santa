@@ -12,6 +12,7 @@ import { ParticipantPreferences } from "./pages/ParticipantPreferences";
 import { VerifyHandler } from "./components/auth/VerifyHandler";
 import { UserSettings } from "./pages/UserSettings";
 import ParticipantDashboard from "./pages/ParticipantDashboard";
+import ValidationGuard from "./contexts/ValidationGuard";
 
 function App() {
   return (
@@ -48,14 +49,24 @@ function App() {
               }
             />
             <Route path="/join/:code" element={<JoinSession />} />
+
             <Route
               path="/sessions/:sessionId/participants/:participantId"
-              element={<ParticipantDashboard />}
+              element={
+                <ValidationGuard>
+                  <ParticipantDashboard />
+                </ValidationGuard>
+              }
             />
             <Route
               path="/sessions/:sessionId/participants/:participantId/preferences"
-              element={<ParticipantPreferences />}
+              element={
+                <ValidationGuard>
+                  <ParticipantPreferences />
+                </ValidationGuard>
+              }
             />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
