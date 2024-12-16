@@ -182,4 +182,52 @@ export class EmailService {
       throw error;
     }
   }
+
+  async sendApologyEmail(): Promise<void> {
+    const baseUrl =
+      'https://plansecretsanta.com/sessions/67604f09f82066919c2a7557/participants/';
+    const recipients = [
+      {
+        name: 'Andrew',
+        email: 'larsvanderniet@gmail.com',
+        updatePreferencesLink: baseUrl + '67605c6cd27f3841310a7ad3',
+      },
+      {
+        name: 'Gino',
+        email: 'larsvanderniet@gmail.com',
+        updatePreferencesLink: baseUrl + '67605c7bd27f3841310a7ad9',
+      },
+      {
+        name: 'Darian',
+        email: 'larsvanderniet@gmail.com',
+        updatePreferencesLink: baseUrl + '67605cead27f3841310a7b02',
+      },
+    ];
+
+    const template = await this.getEmailTemplate('test');
+
+    for (const recipient of recipients) {
+      try {
+        const html = template
+          .replace(/{{ss_name}}/g, recipient.name)
+          .replace(
+            /{{update_preferences_link}}/g,
+            recipient.updatePreferencesLink,
+          );
+
+        await this.sendEmail({
+          to: recipient.email,
+          subject: 'Oopsie! Update Your Preferences 🎄',
+          html,
+        });
+
+        console.log(`Apology email sent to ${recipient.email}`);
+      } catch (error) {
+        console.error(
+          `Error sending apology email to ${recipient.email}:`,
+          error,
+        );
+      }
+    }
+  }
 }

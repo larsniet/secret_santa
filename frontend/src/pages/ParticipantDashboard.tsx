@@ -37,7 +37,7 @@ const ParticipantDashboard: React.FC = () => {
         const sessionData = await sessionService.getSession(sessionId);
         setSession(sessionData);
       } catch (error) {
-        showAlert("error", "Failed to load session data");
+        console.error("Error fetching session data:", error);
       }
     };
 

@@ -25,19 +25,19 @@ const ValidationGuard: React.FC<ValidationGuardProps> = ({ children }) => {
       }
 
       try {
-        const session = await sessionService.getSession(sessionId);
+        // Validate session and participant
         const participant = await participantService.getParticipant(
           sessionId,
           participantId
         );
 
-        // Check if participant belongs to the session
-        if (session && participant && participant.session === sessionId) {
+        if (participant && participant.session === sessionId) {
           setIsValid(true);
         } else {
           navigate("/");
         }
       } catch (error) {
+        console.error("Validation error:", error);
         navigate("/");
       } finally {
         setIsLoading(false);
@@ -51,7 +51,7 @@ const ValidationGuard: React.FC<ValidationGuardProps> = ({ children }) => {
     return <Loading />;
   }
 
-  return isValid ? <>{children}</> : null; // Render children if valid
+  return isValid ? <>{children}</> : null;
 };
 
 export default ValidationGuard;

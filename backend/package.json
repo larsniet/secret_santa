@@ -40,6 +40,7 @@
     "class-validator": "^0.14.1",
     "express": "^4.21.2",
     "mongoose": "^8.8.4",
+    "nestjs-command": "^3.1.4",
     "nodemailer": "^6.9.16",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -50,7 +51,7 @@
     "stripe": "^17.4.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.0.0",
+    "@nestjs/cli": "^10.4.8",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
     "@types/express": "^5.0.0",

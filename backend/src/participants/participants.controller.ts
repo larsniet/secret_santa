@@ -84,11 +84,6 @@ export class ParticipantsController {
     @Param('sessionId') sessionId: string,
     @Param('participantId') participantId: string,
   ): Promise<Participant> {
-    const participant = await this.participantsService.findParticipant(
-      sessionId,
-      participantId,
-    );
-
-    return participant;
+    return this.participantsService.findParticipant(sessionId, participantId);
   }
 }

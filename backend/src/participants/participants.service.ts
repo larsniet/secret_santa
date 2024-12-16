@@ -10,6 +10,7 @@ import { Model, Types } from 'mongoose';
 import { Participant } from './participant.schema';
 import { PLAN_LIMITS } from '../users/user.schema';
 import { SessionsService } from '../sessions/sessions.service';
+import { isValidObjectId } from 'mongoose';
 
 @Injectable()
 export class ParticipantsService {
@@ -30,6 +31,10 @@ export class ParticipantsService {
     sessionId: string,
     participantId: string,
   ): Promise<Participant> {
+    if (!isValidObjectId(sessionId) || !isValidObjectId(participantId)) {
+      throw new BadRequestException('Invalid sessionId or participantId');
+    }
+
     const participant = await this.participantModel
       .findOne({
         _id: new Types.ObjectId(participantId),

@@ -103,13 +103,14 @@ export const ParticipantPreferences: React.FC = () => {
         </header>
         <div className="bg-white p-6 rounded-lg shadow">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Interests */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
                 Interests
               </label>
               <input
                 type="text"
-                value={preferences?.interests}
+                value={preferences.interests}
                 onChange={(e) =>
                   setPreferences({
                     ...preferences,
@@ -117,19 +118,20 @@ export const ParticipantPreferences: React.FC = () => {
                   })
                 }
                 placeholder="e.g., Reading, Cooking, Sports"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
               />
             </div>
 
+            {/* Sizes */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label="Clothing Size"
-                value={preferences?.sizes?.clothing || ""}
+                value={preferences.sizes?.clothing || ""}
                 onChange={(e) =>
                   setPreferences({
                     ...preferences,
                     sizes: {
-                      ...preferences?.sizes,
+                      ...preferences.sizes,
                       clothing: e.target
                         .value as Participant["preferences"]["sizes"]["clothing"],
                     },
@@ -146,12 +148,12 @@ export const ParticipantPreferences: React.FC = () => {
               />
               <Select
                 label="Shoe Size"
-                value={preferences?.sizes?.shoe || ""}
+                value={preferences.sizes?.shoe || ""}
                 onChange={(e) =>
                   setPreferences({
                     ...preferences,
                     sizes: {
-                      ...preferences?.sizes,
+                      ...preferences.sizes,
                       shoe: e.target
                         .value as Participant["preferences"]["sizes"]["shoe"],
                     },
@@ -172,12 +174,12 @@ export const ParticipantPreferences: React.FC = () => {
               />
               <Select
                 label="Ring Size"
-                value={preferences?.sizes?.ring || ""}
+                value={preferences.sizes?.ring || ""}
                 onChange={(e) =>
                   setPreferences({
                     ...preferences,
                     sizes: {
-                      ...preferences?.sizes,
+                      ...preferences.sizes,
                       ring: e.target
                         .value as Participant["preferences"]["sizes"]["ring"],
                     },
@@ -192,59 +194,81 @@ export const ParticipantPreferences: React.FC = () => {
                   { value: "10", label: "10" },
                 ]}
               />
-              <Select
-                label="Age Group"
-                value={preferences?.ageGroup || ""}
-                onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    ageGroup: e.target
-                      .value as Participant["preferences"]["ageGroup"],
-                  })
-                }
-                options={[
-                  { value: "18-25", label: "18-25" },
-                  { value: "26-35", label: "26-35" },
-                  { value: "36-45", label: "36-45" },
-                  { value: "46-55", label: "46-55" },
-                  { value: "56+", label: "56+" },
-                ]}
-              />
             </div>
 
+            {/* Favorite Colors */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Wishlist
-              </label>
-              <textarea
-                value={preferences?.wishlist}
-                onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    wishlist: e.target.value,
-                  })
-                }
-                placeholder="List any specific items you'd like"
-                rows={3}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Restrictions or Allergies
+                Favorite Colors
               </label>
               <input
                 type="text"
-                value={preferences?.restrictions}
+                value={preferences.favoriteColors}
                 onChange={(e) =>
                   setPreferences({
                     ...preferences,
-                    restrictions: e.target.value,
+                    favoriteColors: e.target.value,
                   })
                 }
-                placeholder="e.g., No food items, allergies"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                placeholder="e.g., Red, Blue, Green"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+              />
+            </div>
+
+            {/* Dislikes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Dislikes
+              </label>
+              <input
+                type="text"
+                value={preferences.dislikes}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    dislikes: e.target.value,
+                  })
+                }
+                placeholder="e.g., Socks, Candles"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+              />
+            </div>
+
+            {/* Gender */}
+            <Select
+              label="Gender"
+              value={preferences.gender || ""}
+              onChange={(e) =>
+                setPreferences({
+                  ...preferences,
+                  gender: e.target
+                    .value as Participant["preferences"]["gender"],
+                })
+              }
+              options={[
+                { value: "Male", label: "Male" },
+                { value: "Female", label: "Female" },
+                { value: "Non-binary", label: "Non-binary" },
+                { value: "Prefer not to say", label: "Prefer not to say" },
+              ]}
+            />
+
+            {/* Hobbies */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Hobbies
+              </label>
+              <textarea
+                value={preferences.hobbies}
+                onChange={(e) =>
+                  setPreferences({
+                    ...preferences,
+                    hobbies: e.target.value,
+                  })
+                }
+                placeholder="e.g., Gardening, Cycling"
+                rows={3}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
               />
             </div>
 
