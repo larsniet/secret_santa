@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Participant,
@@ -27,6 +27,9 @@ const ParticipantDashboard: React.FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [productLoadError, setProductLoadError] = useState(false);
+  const initialLoadDone = useRef(false);
 
   // Fetch session data
   useEffect(() => {
@@ -59,6 +62,10 @@ const ParticipantDashboard: React.FC = () => {
           return;
         }
         setAssignedParticipant(participant.assignedTo);
+        // Reset products and pagination when assigned participant changes
+        setProducts([]);
+        setPage(1);
+        setHasMore(true);
       } catch (error) {
         showAlert("error", "Failed to load preferences");
       } finally {
@@ -70,40 +77,86 @@ const ParticipantDashboard: React.FC = () => {
   }, [participantId, sessionId, showAlert]);
 
   const fetchProducts = useCallback(
-    async (page: number) => {
-      if (!sessionId || !participantId) return;
+    async (currentPage: number, isLoadingMore: boolean = false) => {
+      if (
+        !sessionId ||
+        !participantId ||
+        !assignedParticipant?._id ||
+        productLoadError
+      )
+        return;
 
       try {
-        setIsLoadingMore(true);
+        setIsLoadingMore(isLoadingMore);
         const newProducts = await participantService.getMatchingProducts(
           sessionId,
-          assignedParticipant?._id,
-          page
+          assignedParticipant._id,
+          currentPage
         );
-        setProducts((prev) => [...prev, ...newProducts]);
-        if (newProducts.length === 0) setHasMore(false);
+
+        if (newProducts.length === 0) {
+          setHasMore(false);
+          return;
+        }
+
+        setProducts((prev) =>
+          isLoadingMore ? [...prev, ...newProducts] : newProducts
+        );
       } catch (error) {
-        showAlert("error", "Failed to load products");
+        if (currentPage === 1) {
+          showAlert("error", "Failed to load products");
+        }
+        setHasMore(false);
+        setProductLoadError(true);
       } finally {
         setIsLoadingMore(false);
       }
     },
-    [sessionId, participantId, assignedParticipant?._id, showAlert]
+    [
+      sessionId,
+      participantId,
+      assignedParticipant?._id,
+      showAlert,
+      productLoadError,
+    ]
   );
 
   useEffect(() => {
-    if (assignedParticipant) {
-      fetchProducts(1);
+    if (assignedParticipant && !initialLoadDone.current) {
+      // Only fetch on initial load
+      setProducts([]);
+      setPage(1);
+      setHasMore(true);
+      fetchProducts(1, false);
+      initialLoadDone.current = true;
     }
   }, [assignedParticipant, fetchProducts]);
 
-  const loadMoreProducts = () => {
-    if (hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchProducts(nextPage);
+  // Set up intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !isLoadingMore) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchProducts(nextPage, true);
+        }
+      },
+      { threshold: 0.1 } // Start loading when the element is 10% visible
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
-  };
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [fetchProducts, hasMore, isLoadingMore, page]);
 
   if (isLoading) {
     return (
@@ -175,26 +228,43 @@ const ParticipantDashboard: React.FC = () => {
         </div>
 
         {/* Products Section */}
-        {/* <div className="bg-white p-6 rounded-lg shadow space-y-4">
+        <div className="bg-white p-6 rounded-lg shadow space-y-4">
           <h2 className="text-xl font-semibold text-gray-900">
             Gift Suggestions
           </h2>
           <p className="text-sm text-gray-500">
-            Based on the preferences of your assigned participant.
+            Based on {assignedParticipant?.name}'s preferences.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product, index) => (
-              <ProductCard key={index} product={product} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <ProductCard
+                key={`${product.id}-${product.matchScore}`}
+                product={product}
+              />
             ))}
           </div>
-          {hasMore && (
-            <div className="mt-4 flex justify-center">
-              <Button onClick={loadMoreProducts} isLoading={isLoadingMore}>
-                Load More
-              </Button>
+          {/* Loading and error states */}
+          {isLoadingMore && !productLoadError && (
+            <div className="h-10 flex items-center justify-center">
+              <Loading />
             </div>
           )}
-        </div> */}
+          {productLoadError ? (
+            <p className="text-center text-gray-500">
+              Unable to load product suggestions at this time. Please try again
+              later.
+            </p>
+          ) : (
+            products.length === 0 &&
+            !isLoadingMore && (
+              <p className="text-center text-gray-500">
+                No product suggestions available yet. Please check back later or
+                update the preferences to get better suggestions.
+              </p>
+            )
+          )}
+          <div ref={loadMoreRef} className="h-10" />
+        </div>
       </div>
     </Layout>
   );

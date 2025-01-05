@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ParticipantsService } from './participants.service';
@@ -47,8 +48,13 @@ export class ParticipantsController {
   async deleteParticipant(
     @Param('sessionId') sessionId: string,
     @Param('participantId') participantId: string,
+    @Request() req,
   ): Promise<{ message: string }> {
-    await this.participantsService.deleteParticipant(sessionId, participantId);
+    await this.participantsService.deleteParticipant(
+      sessionId,
+      participantId,
+      req.user.userId,
+    );
     return { message: 'Participant deleted successfully' };
   }
 

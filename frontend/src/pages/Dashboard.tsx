@@ -3,12 +3,20 @@ import { Link } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { Button } from "../components/common/Button";
 import { useAlert } from "../contexts/AlertContext";
-import { sessionService, Session } from "../services/session.service";
-import { stripePromise } from "../lib/stripe";
-import { EventPlan, PLAN_LIMITS } from "../types/plans";
+import {
+  sessionService,
+  Session,
+  UpdateSessionDto,
+} from "../services/session.service";
 import { Loading } from "../components/common/Loading";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { StatusBadge } from "../components/common/StatusBadge";
+import {
+  formatDate,
+  formatDateTime,
+  getCurrentTimezone,
+  formatForDateTimeInput,
+} from "../lib/date-utils";
 
 export const Dashboard: React.FC = () => {
   const { showAlert } = useAlert();
@@ -18,9 +26,18 @@ export const Dashboard: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    plan: EventPlan.FREE,
+    budget: 0,
+    registrationDeadline: "",
+    giftExchangeDate: "",
+    timezone: getCurrentTimezone(),
   });
   const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
+  const [sessionToEdit, setSessionToEdit] = useState<Session | null>(null);
+  const [editFormData, setEditFormData] = useState<UpdateSessionDto>({
+    budget: 0,
+    registrationDeadline: "",
+    giftExchangeDate: "",
+  });
 
   const loadSessions = useCallback(async () => {
     try {
@@ -65,43 +82,20 @@ export const Dashboard: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Check if trying to create a free session
-      if (formData.plan === EventPlan.FREE) {
-        // Check for existing active free sessions
-        const existingFreeSessions = sessions.filter(
-          (s) => s.plan === EventPlan.FREE && s.status === "active"
-        );
-        if (existingFreeSessions.length > 0) {
-          showAlert(
-            "error",
-            "You can only have one active free session. Please upgrade to a paid plan or complete/delete your existing free session."
-          );
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      const session = await sessionService.createSession(formData);
-
-      // If it's a paid plan, redirect to payment
-      if (formData.plan !== EventPlan.FREE) {
-        const stripe = await stripePromise;
-        if (!stripe) throw new Error("Failed to load payment system");
-
-        const checkoutSession = await sessionService.createCheckoutSession(
-          session._id
-        );
-        await stripe.redirectToCheckout({
-          sessionId: checkoutSession.id,
-        });
-        return;
-      }
-
+      const newSession = await sessionService.createSession(formData);
+      console.log("Created session in frontend:", newSession);
       showAlert("success", "Session created successfully!");
-      setFormData({ name: "", plan: EventPlan.FREE });
+      setFormData({
+        name: "",
+        budget: 0,
+        registrationDeadline: "",
+        giftExchangeDate: "",
+        timezone: getCurrentTimezone(),
+      });
       setShowCreateForm(false);
-      loadSessions();
+      setSessions([newSession, ...sessions]);
     } catch (err: any) {
+      console.error("Error creating session:", err);
       showAlert(
         "error",
         err.response?.data?.message || "Failed to create session"
@@ -113,9 +107,50 @@ export const Dashboard: React.FC = () => {
 
   const sessionStats = {
     total: sessions.length,
-    active: sessions.filter((s) => s.status === "active").length,
-    pending: sessions.filter((s) => s.status === "pending_payment").length,
+    open: sessions.filter((s) => s.status === "open").length,
+    locked: sessions.filter((s) => s.status === "locked").length,
     completed: sessions.filter((s) => s.status === "completed").length,
+  };
+
+  const handleEditClick = (session: Session) => {
+    setSessionToEdit(session);
+    setEditFormData({
+      name: session.name,
+      budget: session.budget,
+      registrationDeadline: formatForDateTimeInput(
+        session.registrationDeadline
+      ),
+      giftExchangeDate: session.giftExchangeDate.split("T")[0],
+      timezone: getCurrentTimezone(),
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sessionToEdit) return;
+
+    try {
+      setIsSubmitting(true);
+      await sessionService.updateSession(sessionToEdit._id, editFormData);
+      showAlert("success", "Session updated successfully");
+      setSessionToEdit(null);
+      loadSessions();
+    } catch (err: any) {
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to update session"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: name === "budget" ? Number(value) : value,
+    }));
   };
 
   if (isLoading) {
@@ -150,7 +185,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="text-sm font-medium text-gray-500">
               Total Sessions
@@ -165,25 +200,15 @@ export const Dashboard: React.FC = () => {
             <div className="text-sm font-medium text-green-500">Active</div>
             <div className="mt-2 flex items-baseline">
               <div className="text-2xl font-semibold text-gray-900">
-                {sessionStats.active}
+                {sessionStats.open}
               </div>
             </div>
           </div>
           <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm font-medium text-yellow-500">
-              Pending Payment
-            </div>
+            <div className="text-sm font-medium text-blue-500">Locked</div>
             <div className="mt-2 flex items-baseline">
               <div className="text-2xl font-semibold text-gray-900">
-                {sessionStats.pending}
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="text-sm font-medium text-blue-500">Completed</div>
-            <div className="mt-2 flex items-baseline">
-              <div className="text-2xl font-semibold text-gray-900">
-                {sessionStats.completed}
+                {sessionStats.locked}
               </div>
             </div>
           </div>
@@ -236,7 +261,7 @@ export const Dashboard: React.FC = () => {
                       })
                     }
                     placeholder="Enter session name"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm pr-16"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
                     required
                     maxLength={50}
                     disabled={isSubmitting}
@@ -249,353 +274,298 @@ export const Dashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">
-                  Select Plan
+                <label
+                  htmlFor="budget"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Budget per person (in your currency)
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(PLAN_LIMITS).map(([plan, details]) => {
-                    const hasActiveFreeSession =
-                      plan === EventPlan.FREE &&
-                      sessions.some(
-                        (s) =>
-                          s.plan === EventPlan.FREE && s.status === "active"
-                      );
-
-                    return (
-                      <div
-                        key={plan}
-                        className={`relative rounded-lg border p-6 cursor-pointer ${
-                          plan === formData.plan
-                            ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
-                            : "border-gray-200 hover:border-[#B91C1C]"
-                        } ${
-                          {
-                            BUSINESS: "col-span-2 md:col-span-1",
-                            GROUP: "col-span-2 md:col-span-1",
-                            FREE: "col-span-2 md:col-span-1",
-                          }[plan as EventPlan]
-                        }`}
-                        onClick={() =>
-                          setFormData({ ...formData, plan: plan as EventPlan })
-                        }
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {plan}
-                            </h3>
-                            <p className="mt-1 text-sm text-gray-500">
-                              {details.price === 0
-                                ? "Free"
-                                : `€${details.price}`}
-                            </p>
-                            {hasActiveFreeSession && (
-                              <p className="mt-1 text-xs text-red-600">
-                                You already have an active free session
-                              </p>
-                            )}
-                          </div>
-                          <div
-                            className={`h-5 w-5 rounded-full border ${
-                              formData.plan === plan && !hasActiveFreeSession
-                                ? "border-[#B91C1C] bg-[#B91C1C]"
-                                : "border-gray-300 bg-white"
-                            } flex items-center justify-center`}
-                          >
-                            {formData.plan === plan &&
-                              !hasActiveFreeSession && (
-                                <svg
-                                  className="h-3 w-3 text-white"
-                                  fill="currentColor"
-                                  viewBox="0 0 12 12"
-                                >
-                                  <path d="M3.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L5 6.586 3.707 5.293z" />
-                                </svg>
-                              )}
-                          </div>
-                        </div>
-                        <ul className="mt-2 space-y-1">
-                          {details.features.map(
-                            (feature: string, index: number) => (
-                              <li key={index} className="flex items-start">
-                                <svg
-                                  className="h-4 w-4 text-[#B91C1C] mt-0.5 mr-2"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                                <span className="text-xs text-gray-500">
-                                  {feature}
-                                </span>
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    );
-                  })}
+                <div className="mt-1">
+                  <input
+                    type="number"
+                    id="budget"
+                    min="1"
+                    step="0.01"
+                    value={formData.budget}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        budget: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="Enter budget amount"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                    required
+                    disabled={isSubmitting}
+                  />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => setShowCreateForm(false)}
-                  disabled={isSubmitting}
+              <div>
+                <label
+                  htmlFor="registration-deadline"
+                  className="block text-sm font-medium text-gray-700"
                 >
-                  Cancel
-                </Button>
-                <Button type="submit" isLoading={isSubmitting}>
-                  {formData.plan === EventPlan.FREE
-                    ? "Create Session"
-                    : "Continue to Payment"}
+                  Registration Deadline
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="datetime-local"
+                    id="registration-deadline"
+                    value={formData.registrationDeadline}
+                    min={new Date().toISOString().slice(0, 16)}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        registrationDeadline: e.target.value,
+                      })
+                    }
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  Last date for participants to join
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="gift-exchange-date"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Gift Exchange Date
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="datetime-local"
+                    id="gift-exchange-date"
+                    value={formData.giftExchangeDate}
+                    min={formData.registrationDeadline}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        giftExchangeDate: e.target.value,
+                      })
+                    }
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                    required
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  When the gift exchange will take place
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    !formData.name.trim() ||
+                    formData.budget <= 0 ||
+                    !formData.registrationDeadline ||
+                    !formData.giftExchangeDate
+                  }
+                  isLoading={isSubmitting}
+                >
+                  Create Session
                 </Button>
               </div>
             </form>
           </div>
         )}
 
-        {sessions.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <svg
-              className="mx-auto h-12 w-12 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
-            <h3 className="mt-2 text-lg font-medium text-gray-900">
-              No sessions yet
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Create your first Secret Santa session to get started!
-            </p>
-            <div className="mt-6">
-              <Button onClick={() => setShowCreateForm(true)}>
-                Create New Session
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">
-                Recent Sessions
-              </h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {sessions.map((session) => {
-                const planStyles = {
-                  BUSINESS:
-                    "bg-gradient-to-br from-purple-50 to-white border-purple-200 hover:border-purple-300",
-                  GROUP:
-                    "bg-gradient-to-br from-blue-50 to-white border-blue-200 hover:border-blue-300",
-                  FREE: "bg-white border-gray-200 hover:border-gray-300",
-                }[session.plan as EventPlan];
-
-                return (
-                  <div
-                    key={session._id}
-                    className="block transition-all duration-200"
-                  >
-                    {session.status !== "completed" ? (
-                      <Link to={`/sessions/${session._id}`}>
-                        <div
-                          className={`p-6 ${planStyles} hover:shadow-md transition-all duration-200`}
-                        >
-                          <div className="flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-4">
-                              <div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-1">
-                                  {session.name}
-                                </h3>
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-3">
-                                  <StatusBadge
-                                    type="status"
-                                    value={session.status}
-                                  />
-                                  <StatusBadge
-                                    type="plan"
-                                    value={session.plan}
-                                  />
-                                </div>
-                              </div>
-                              <Button
-                                variant="danger"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setSessionToDelete(session);
-                                }}
-                                isLoading={isSubmitting}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                            <div className="flex flex-col gap-2 text-sm text-gray-600">
-                              <div className="flex items-center gap-2">
-                                <svg
-                                  className="w-5 h-5 text-gray-400"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                                  />
-                                </svg>
-                                <span>
-                                  {session.participants?.length || 0}{" "}
-                                  participants
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <svg
-                                  className="w-5 h-5 text-gray-400"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                                <span>
-                                  Created{" "}
-                                  {new Date(
-                                    session.createdAt
-                                  ).toLocaleDateString("en-GB", {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                  })}
-                                </span>
-                              </div>
-                              {session.status === "pending_payment" && (
-                                <div className="flex items-center gap-2 text-yellow-600">
-                                  <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  <span>Payment required to activate</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+        {/* Sessions List */}
+        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+          <ul className="divide-y divide-gray-200">
+            {sessions.map((session) => (
+              <li key={session._id}>
+                <Link
+                  to={`/sessions/${session._id}`}
+                  className="block hover:bg-gray-50"
+                >
+                  <div className="px-4 py-4 sm:px-6">
+                    <div className="flex items-center justify-between">
+                      <div className="truncate">
+                        <div className="flex items-center space-x-3">
+                          <h3 className="text-sm font-medium text-[#B91C1C] truncate">
+                            {session.name}
+                          </h3>
+                          <StatusBadge status={session.status} />
                         </div>
-                      </Link>
-                    ) : (
-                      <div className={`p-6 ${planStyles}`}>
-                        <div className="flex flex-col h-full">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h3 className="text-lg font-medium text-gray-900 mb-1">
-                                {session.name}
-                              </h3>
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-3">
-                                <StatusBadge
-                                  type="status"
-                                  value={session.status}
-                                />
-                                <StatusBadge type="plan" value={session.plan} />
-                              </div>
-                            </div>
+                        <div className="mt-2 flex">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <svg
+                              className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                              />
+                            </svg>
+                            {session.participants?.length || 0} participants
                           </div>
-                          <div className="flex flex-col gap-2 text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
-                              <svg
-                                className="w-5 h-5 text-gray-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                                />
-                              </svg>
-                              <span>
-                                {session.participants?.length || 0} participants
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <svg
-                                className="w-5 h-5 text-gray-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                              <span>
-                                Created{" "}
-                                {new Date(session.createdAt).toLocaleDateString(
-                                  "en-GB",
-                                  {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                  }
-                                )}
-                              </span>
-                            </div>
+                          <div className="ml-6 flex items-center text-sm text-gray-500">
+                            <svg
+                              className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            Budget: {session.budget}
+                          </div>
+                          <div className="ml-6 flex items-center text-sm text-gray-500">
+                            <svg
+                              className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            Exchange: {formatDate(session.giftExchangeDate)}
                           </div>
                         </div>
                       </div>
-                    )}
+                      <div className="ml-2 flex-shrink-0 flex">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setSessionToDelete(session);
+                          }}
+                          className="ml-2 flex items-center text-red-600 hover:text-red-900"
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        <ConfirmModal
-          isOpen={!!sessionToDelete}
-          onClose={() => setSessionToDelete(null)}
-          onConfirm={handleDelete}
-          title="Delete Session"
-          message={`Are you sure you want to delete the session "${sessionToDelete?.name}"? This action cannot be undone.`}
-          confirmText="Delete Session"
-        />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
+
+      <ConfirmModal
+        isOpen={!!sessionToDelete}
+        onClose={() => setSessionToDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Session"
+        message="Are you sure you want to delete this session? This action cannot be undone."
+        confirmText="Delete"
+        isSubmitting={isSubmitting}
+      />
+
+      {/* Edit Session Modal */}
+      {sessionToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-semibold mb-4">Edit Session Details</h2>
+            <form onSubmit={handleEditSubmit}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editFormData.name}
+                    onChange={handleEditChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Budget
+                  </label>
+                  <input
+                    type="number"
+                    name="budget"
+                    value={editFormData.budget}
+                    onChange={handleEditChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Registration Deadline
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="registrationDeadline"
+                    value={editFormData.registrationDeadline}
+                    onChange={handleEditChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Gift Exchange Date
+                  </label>
+                  <input
+                    type="date"
+                    name="giftExchangeDate"
+                    value={editFormData.giftExchangeDate}
+                    onChange={handleEditChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setSessionToEdit(null)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" disabled={isSubmitting}>
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

@@ -93,14 +93,11 @@ export class AuthService {
   }
 
   async verifyEmail(token: string) {
-    console.log('Verifying token:', token); // Add logging
     const user = await this.userModel.findOne({
       emailVerificationToken: token,
       emailVerificationTokenExpires: { $gt: new Date() },
       isEmailVerified: false,
     });
-
-    console.log('Found user:', user); // Add logging
 
     if (!user) {
       throw new UnauthorizedException('Invalid or expired verification token');

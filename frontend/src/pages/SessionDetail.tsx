@@ -10,11 +10,17 @@ import {
 } from "../services/participant.service";
 import { useAlert } from "../contexts/AlertContext";
 import { Loading } from "../components/common/Loading";
-import { PLAN_LIMITS, EventPlan } from "../types/plans";
-import { stripePromise } from "../lib/stripe";
 import { ConfirmModal } from "../components/common/ConfirmModal";
 import { StatusBadge } from "../components/common/StatusBadge";
 import { Select } from "../components/common/Select";
+import {
+  formatDate,
+  formatDateTime,
+  getCurrentTimezone,
+  formatForDateTimeInput,
+} from "../lib/date-utils";
+
+const MAX_PARTICIPANTS = 25;
 
 export const SessionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,7 +32,6 @@ export const SessionDetail: React.FC = () => {
     name: "",
     email: "",
   });
-  const [isStartSessionLoading, setIsStartSessionLoading] = useState(false);
   const [isDeleteSessionLoading, setIsDeleteSessionLoading] = useState(false);
   const [loadingParticipantIds, setLoadingParticipantIds] = useState<string[]>(
     []
@@ -37,44 +42,36 @@ export const SessionDetail: React.FC = () => {
   const [editingPreferences, setEditingPreferences] = useState<string | null>(
     null
   );
+  const [isEditingDetails, setIsEditingDetails] = useState(false);
+  const [editedDetails, setEditedDetails] = useState({
+    budget: 0,
+    registrationDeadline: "",
+    giftExchangeDate: "",
+  });
 
-  const [preferences, setPreferences] = useState<
-    Participant["preferences"] | undefined
-  >({
+  const emptyPreferences: Required<NonNullable<Participant["preferences"]>> = {
     interests: "",
     sizes: {
-      clothing: undefined,
-      shoe: undefined,
-      ring: undefined,
+      clothing: "",
+      shoe: "",
+      ring: "",
     },
     wishlist: "",
     restrictions: "",
-    ageGroup: undefined,
-    gender: undefined,
-    favoriteColors: "",
-    dislikes: "",
-    hobbies: "",
-  });
-  const [selectedPlan, setSelectedPlan] = useState<EventPlan | null>(null);
+    ageGroup: "",
+    gender: "",
+  };
+
+  const [preferences, setPreferences] =
+    useState<Required<NonNullable<Participant["preferences"]>>>(
+      emptyPreferences
+    );
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteParticipantId, setDeleteParticipantId] = useState<string | null>(
     null
   );
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState("");
-
-  useEffect(() => {
-    if (session) {
-      setSelectedPlan(session.plan as EventPlan);
-    }
-  }, [session]);
-
-  useEffect(() => {
-    if (session?.status === "completed") {
-      navigate("/dashboard");
-      return;
-    }
-  }, [session, navigate]);
 
   const loadSessionAndParticipants = useCallback(async () => {
     if (!id) return;
@@ -110,12 +107,11 @@ export const SessionDetail: React.FC = () => {
     e.preventDefault();
     if (!session) return;
 
-    // Check participant limit based on plan
-    const planLimit = PLAN_LIMITS[session.plan as EventPlan].maxParticipants;
-    if (participants.length >= planLimit) {
+    // Check participant limit
+    if (participants.length >= MAX_PARTICIPANTS) {
       showAlert(
         "error",
-        `Your ${session.plan} plan is limited to ${planLimit} participants. Please upgrade your plan to add more participants.`
+        `This session is limited to ${MAX_PARTICIPANTS} participants.`
       );
       return;
     }
@@ -136,25 +132,6 @@ export const SessionDetail: React.FC = () => {
       );
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleStartSession = async () => {
-    if (!session) return;
-
-    try {
-      setIsStartSessionLoading(true);
-      await participantService.createAssignments(session._id);
-      showAlert("success", "Secret Santa assignments have been sent!");
-      navigate("/dashboard");
-    } catch (err: any) {
-      showAlert(
-        "error",
-        err.response?.data?.message ||
-          "Failed to create Secret Santa assignments"
-      );
-    } finally {
-      setIsStartSessionLoading(false);
     }
   };
 
@@ -258,7 +235,22 @@ export const SessionDetail: React.FC = () => {
 
   const startEditingPreferences = (participant: Participant) => {
     setEditingPreferences(participant._id);
-    setPreferences(participant.preferences);
+    if (participant.preferences) {
+      setPreferences({
+        interests: participant.preferences.interests || "",
+        sizes: {
+          clothing: participant.preferences.sizes?.clothing || "",
+          shoe: participant.preferences.sizes?.shoe || "",
+          ring: participant.preferences.sizes?.ring || "",
+        },
+        wishlist: participant.preferences.wishlist || "",
+        restrictions: participant.preferences.restrictions || "",
+        ageGroup: participant.preferences.ageGroup || "",
+        gender: participant.preferences.gender || "",
+      });
+    } else {
+      setPreferences(emptyPreferences);
+    }
   };
 
   const handleNameSave = async () => {
@@ -276,6 +268,70 @@ export const SessionDetail: React.FC = () => {
       showAlert(
         "error",
         err.response?.data?.message || "Failed to update session name"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateField = (
+    field: keyof typeof preferences,
+    value: string
+  ) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleUpdateSize = (
+    field: keyof typeof preferences.sizes,
+    value: string
+  ) => {
+    setPreferences((prev) => ({
+      ...prev,
+      sizes: {
+        ...prev.sizes,
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleEditDetails = () => {
+    setIsEditingDetails(true);
+    setEditedDetails({
+      budget: session?.budget || 0,
+      registrationDeadline: formatForDateTimeInput(
+        session?.registrationDeadline || ""
+      ),
+      giftExchangeDate: session?.giftExchangeDate.split("T")[0] || "",
+    });
+  };
+
+  const handleDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditedDetails((prev) => ({
+      ...prev,
+      [name]: name === "budget" ? Number(value) : value,
+    }));
+  };
+
+  const handleDetailsSave = async () => {
+    if (!session) return;
+
+    try {
+      setIsSubmitting(true);
+      const updatedSession = await sessionService.updateSession(
+        session._id,
+        editedDetails
+      );
+      setSession(updatedSession);
+      setIsEditingDetails(false);
+      showAlert("success", "Session details updated successfully");
+    } catch (err: any) {
+      showAlert(
+        "error",
+        err.response?.data?.message || "Failed to update session details"
       );
     } finally {
       setIsSubmitting(false);
@@ -307,40 +363,45 @@ export const SessionDetail: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900 mb-4">
               {session.name}
             </h1>
-            <p className="text-sm text-gray-500">
-              Created on{" "}
-              {new Date(session.createdAt).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              })}
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">
+                Created on {formatDate(session.createdAt)}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Budget per person
+                    </h3>
+                  </div>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {session.budget}
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Registration Deadline
+                  </h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {formatDateTime(session.registrationDeadline)}
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Gift Exchange Date
+                  </h3>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {formatDate(session.giftExchangeDate)}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <StatusBadge type="status" value={session.status} />
-            <StatusBadge type="plan" value={session.plan} />
-            {session.status === "pending_payment" && (
-              <Button
-                onClick={async () => {
-                  try {
-                    const checkoutSession =
-                      await sessionService.createCheckoutSession(session._id);
-                    const stripe = await stripePromise;
-                    if (!stripe)
-                      throw new Error("Failed to load payment system");
-                    await stripe.redirectToCheckout({
-                      sessionId: checkoutSession.id,
-                    });
-                  } catch (err: any) {
-                    showAlert(
-                      "error",
-                      err.response?.data?.message ||
-                        "Failed to initiate payment"
-                    );
-                  }
-                }}
-              >
-                Complete Payment
+            <StatusBadge status={session.status} />
+            {session.status === "open" && (
+              <Button variant="secondary" onClick={handleEditDetails}>
+                Edit Session
               </Button>
             )}
             {session.status !== "completed" && (
@@ -355,43 +416,8 @@ export const SessionDetail: React.FC = () => {
           </div>
         </div>
 
-        {session.status === "pending_payment" && (
-          <div className="mt-6">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-              <h2 className="text-xl font-semibold text-yellow-800 mb-3">
-                Payment Required
-              </h2>
-              <p className="text-yellow-700 mb-4">
-                Please complete the payment to activate your session and start
-                inviting participants.
-              </p>
-              <Button
-                onClick={async () => {
-                  try {
-                    const checkoutSession =
-                      await sessionService.createCheckoutSession(session._id);
-                    const stripe = await stripePromise;
-                    if (!stripe)
-                      throw new Error("Failed to load payment system");
-                    await stripe.redirectToCheckout({
-                      sessionId: checkoutSession.id,
-                    });
-                  } catch (err: any) {
-                    showAlert(
-                      "error",
-                      err.response?.data?.message ||
-                        "Failed to initiate payment"
-                    );
-                  }
-                }}
-              >
-                Complete Payment
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {session.status === "active" && (
+        {/* Invite Link Section */}
+        {session.status === "open" && (
           <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
             <h2 className="text-lg font-medium text-gray-900 mb-2">
               Invite Participants
@@ -414,183 +440,23 @@ export const SessionDetail: React.FC = () => {
           </div>
         )}
 
-        {session.status === "active" && (
+        {/* Add Participant Form */}
+        {session.status === "open" && (
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
                 Add Participant
               </h2>
               <div className="text-sm text-gray-500">
-                {participants.length} /{" "}
-                {PLAN_LIMITS[session.plan as EventPlan].maxParticipants}{" "}
-                participants
+                {participants.length} / {MAX_PARTICIPANTS} participants
               </div>
             </div>
-            {participants.length >=
-            PLAN_LIMITS[session.plan as EventPlan].maxParticipants ? (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Upgrade Plan
-                  </h2>
-                  <p className="text-sm text-yellow-700">
-                    You've reached the maximum number of participants for your{" "}
-                    {session.plan} plan
-                  </p>
-                </div>
-
-                {session.plan !== EventPlan.BUSINESS && (
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-4">
-                        Select Plan
-                      </label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {Object.entries(PLAN_LIMITS).map(([plan, details]) => {
-                          const isLowerTier =
-                            plan === EventPlan.FREE ||
-                            (plan === EventPlan.GROUP &&
-                              session.plan === EventPlan.BUSINESS);
-
-                          // Calculate price with potential discount
-                          const displayPrice =
-                            plan === EventPlan.BUSINESS &&
-                            session.plan === EventPlan.GROUP
-                              ? 6 // Discounted price for GROUP to BUSINESS upgrade
-                              : details.price;
-
-                          return (
-                            <div
-                              key={plan}
-                              className={`relative rounded-lg border p-4 ${
-                                isLowerTier
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : "cursor-pointer " +
-                                    (plan === selectedPlan
-                                      ? "border-[#B91C1C] ring-2 ring-[#B91C1C]"
-                                      : "border-gray-200 hover:border-[#B91C1C]")
-                              }`}
-                              onClick={() => {
-                                if (!isLowerTier && plan !== session.plan) {
-                                  setSelectedPlan(plan as EventPlan);
-                                }
-                              }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h3 className="text-sm font-medium text-gray-900">
-                                    {plan}
-                                  </h3>
-                                  <p className="mt-1 text-sm text-gray-500">
-                                    {displayPrice === 0
-                                      ? "Free"
-                                      : `€${displayPrice}`}
-                                    {plan === EventPlan.BUSINESS &&
-                                      session.plan === EventPlan.GROUP && (
-                                        <span className="ml-2 text-xs text-green-600">
-                                          40% off upgrade
-                                        </span>
-                                      )}
-                                  </p>
-                                  {isLowerTier && (
-                                    <p className="mt-1 text-xs text-red-600">
-                                      Cannot downgrade to a lower tier
-                                    </p>
-                                  )}
-                                </div>
-                                <div
-                                  className={`h-5 w-5 rounded-full border ${
-                                    plan === selectedPlan && !isLowerTier
-                                      ? "border-[#B91C1C] bg-[#B91C1C]"
-                                      : "border-gray-300 bg-white"
-                                  } flex items-center justify-center`}
-                                >
-                                  {plan === selectedPlan && !isLowerTier && (
-                                    <svg
-                                      className="h-3 w-3 text-white"
-                                      fill="currentColor"
-                                      viewBox="0 0 12 12"
-                                    >
-                                      <path d="M3.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 00-1.414-1.414L5 6.586 3.707 5.293z" />
-                                    </svg>
-                                  )}
-                                </div>
-                              </div>
-                              <ul className="mt-2 space-y-1">
-                                {details.features.map(
-                                  (feature: string, index: number) => (
-                                    <li
-                                      key={index}
-                                      className="flex items-start"
-                                    >
-                                      <svg
-                                        className="h-4 w-4 text-[#B91C1C] mt-0.5 mr-2"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M5 13l4 4L19 7"
-                                        />
-                                      </svg>
-                                      <span className="text-xs text-gray-500">
-                                        {feature}
-                                      </span>
-                                    </li>
-                                  )
-                                )}
-                              </ul>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end space-x-3">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => setSelectedPlan(null)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={async () => {
-                          if (selectedPlan && selectedPlan !== session.plan) {
-                            try {
-                              const updatedSession =
-                                await sessionService.createCheckoutSession(
-                                  session._id
-                                );
-                              const stripe = await stripePromise;
-                              if (!stripe)
-                                throw new Error(
-                                  "Failed to load payment system"
-                                );
-                              await stripe.redirectToCheckout({
-                                sessionId: updatedSession.id,
-                              });
-                            } catch (err: any) {
-                              showAlert(
-                                "error",
-                                err.response?.data?.message ||
-                                  "Failed to initiate upgrade"
-                              );
-                            }
-                          }
-                        }}
-                        disabled={
-                          !selectedPlan || selectedPlan === session.plan
-                        }
-                      >
-                        Continue to Payment
-                      </Button>
-                    </div>
-                  </div>
-                )}
+            {participants.length >= MAX_PARTICIPANTS ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                <p className="text-sm text-yellow-700">
+                  You've reached the maximum number of participants for this
+                  session.
+                </p>
               </div>
             ) : (
               <form onSubmit={handleAddParticipant}>
@@ -632,7 +498,8 @@ export const SessionDetail: React.FC = () => {
           </div>
         )}
 
-        {(session.status === "active" || session.status === "archived") && (
+        {/* Participants List */}
+        {(session.status === "open" || session.status === "locked") && (
           <div className="mt-6">
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -640,14 +507,6 @@ export const SessionDetail: React.FC = () => {
                   <h2 className="text-xl font-semibold text-gray-900">
                     Participants ({participants.length})
                   </h2>
-                  {session.status === "active" && participants.length >= 2 && (
-                    <Button
-                      onClick={handleStartSession}
-                      isLoading={isStartSessionLoading}
-                    >
-                      Start Secret Santa
-                    </Button>
-                  )}
                 </div>
               </div>
 
@@ -676,9 +535,14 @@ export const SessionDetail: React.FC = () => {
                             </p>
                           )}
                         {participant.preferences &&
-                          Object.values(participant.preferences).some(
-                            Boolean
-                          ) && (
+                          (participant.preferences.interests ||
+                            participant.preferences.wishlist ||
+                            participant.preferences.restrictions ||
+                            participant.preferences.ageGroup ||
+                            participant.preferences.gender ||
+                            Object.values(participant.preferences.sizes).some(
+                              (size) => size
+                            )) && (
                             <div className="mt-2 text-sm text-gray-500">
                               <span className="font-medium">
                                 Has gift preferences
@@ -686,7 +550,7 @@ export const SessionDetail: React.FC = () => {
                             </div>
                           )}
                       </div>
-                      {session.status === "active" && (
+                      {session.status === "open" && (
                         <div className="flex flex-col sm:flex-row gap-2">
                           <Button
                             variant="secondary"
@@ -707,6 +571,16 @@ export const SessionDetail: React.FC = () => {
                             )}
                           >
                             Remove
+                          </Button>
+                        </div>
+                      )}
+                      {session.status === "locked" && (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button
+                            variant="secondary"
+                            onClick={() => startEditingPreferences(participant)}
+                          >
+                            View Preferences
                           </Button>
                         </div>
                       )}
@@ -735,13 +609,7 @@ export const SessionDetail: React.FC = () => {
                     type="text"
                     value={preferences?.interests || ""}
                     onChange={(e) =>
-                      setPreferences(
-                        (prevPreferences) =>
-                          ({
-                            ...prevPreferences,
-                            interests: e.target.value || undefined,
-                          } as Participant["preferences"])
-                      )
+                      handleUpdateField("interests", e.target.value)
                     }
                     placeholder="e.g., Reading, Cooking, Sports"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
@@ -752,14 +620,7 @@ export const SessionDetail: React.FC = () => {
                     label="Clothing Size (optional)"
                     value={preferences?.sizes?.clothing || ""}
                     onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        sizes: {
-                          ...preferences?.sizes,
-                          clothing: e.target
-                            .value as Participant["preferences"]["sizes"]["clothing"],
-                        },
-                      })
+                      handleUpdateSize("clothing", e.target.value)
                     }
                     options={[
                       { value: "XS", label: "XS" },
@@ -775,16 +636,7 @@ export const SessionDetail: React.FC = () => {
                   <Select
                     label="Shoe Size (optional)"
                     value={preferences?.sizes?.shoe || ""}
-                    onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        sizes: {
-                          ...preferences?.sizes,
-                          shoe: e.target.value as
-                            | Participant["preferences"]["sizes"]["shoe"],
-                        },
-                      })
-                    }
+                    onChange={(e) => handleUpdateSize("shoe", e.target.value)}
                     options={[
                       { value: "36", label: "36" },
                       { value: "37", label: "37" },
@@ -803,16 +655,7 @@ export const SessionDetail: React.FC = () => {
                   <Select
                     label="Ring Size (optional)"
                     value={preferences?.sizes?.ring || ""}
-                    onChange={(e) =>
-                      setPreferences({
-                        ...preferences,
-                        sizes: {
-                          ...preferences?.sizes,
-                          ring: e.target
-                            .value as Participant["preferences"]["sizes"]["ring"],
-                        },
-                      })
-                    }
+                    onChange={(e) => handleUpdateSize("ring", e.target.value)}
                     options={[
                       { value: "5", label: "5" },
                       { value: "6", label: "6" },
@@ -830,13 +673,7 @@ export const SessionDetail: React.FC = () => {
                   <textarea
                     value={preferences?.wishlist || ""}
                     onChange={(e) =>
-                      setPreferences(
-                        (prevPreferences) =>
-                          ({
-                            ...prevPreferences,
-                            wishlist: e.target.value || undefined,
-                          } as Participant["preferences"])
-                      )
+                      handleUpdateField("wishlist", e.target.value)
                     }
                     placeholder="List any specific items you'd like"
                     rows={3}
@@ -851,13 +688,7 @@ export const SessionDetail: React.FC = () => {
                     type="text"
                     value={preferences?.restrictions || ""}
                     onChange={(e) =>
-                      setPreferences(
-                        (prevPreferences) =>
-                          ({
-                            ...prevPreferences,
-                            restrictions: e.target.value || undefined,
-                          } as Participant["preferences"])
-                      )
+                      handleUpdateField("restrictions", e.target.value)
                     }
                     placeholder="e.g., No food items, allergies"
                     className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
@@ -868,21 +699,14 @@ export const SessionDetail: React.FC = () => {
                     label="Age Group (optional)"
                     value={preferences?.ageGroup || ""}
                     onChange={(e) =>
-                      setPreferences(
-                        (prevPreferences) =>
-                          ({
-                            ...prevPreferences,
-                            ageGroup: e.target
-                              .value as Participant["preferences"]["ageGroup"],
-                          } as Participant["preferences"])
-                      )
+                      handleUpdateField("ageGroup", e.target.value)
                     }
                     options={[
-                      { value: "18-25", label: "18-25" },
-                      { value: "26-35", label: "26-35" },
-                      { value: "36-45", label: "36-45" },
-                      { value: "46-55", label: "46-55" },
-                      { value: "56+", label: "56+" },
+                      { value: "0-12", label: "0-12" },
+                      { value: "13-19", label: "13-19" },
+                      { value: "20-29", label: "20-29" },
+                      { value: "30-49", label: "30-49" },
+                      { value: "50+", label: "50+" },
                     ]}
                   />
                 </div>
@@ -891,14 +715,7 @@ export const SessionDetail: React.FC = () => {
                     label="Gender (optional)"
                     value={preferences?.gender || ""}
                     onChange={(e) =>
-                      setPreferences(
-                        (prevPreferences) =>
-                          ({
-                            ...prevPreferences,
-                            gender: e.target
-                              .value as Participant["preferences"]["gender"],
-                          } as Participant["preferences"])
-                      )
+                      handleUpdateField("gender", e.target.value)
                     }
                     options={[
                       { value: "Male", label: "Male" },
@@ -924,6 +741,77 @@ export const SessionDetail: React.FC = () => {
                   isLoading={isSubmitting}
                 >
                   Save Preferences
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Details Modal */}
+        {isEditingDetails && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h2 className="text-xl font-semibold mb-4">
+                Edit Session Details
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Budget
+                  </label>
+                  <input
+                    type="number"
+                    name="budget"
+                    value={editedDetails.budget}
+                    onChange={handleDetailsChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Registration Deadline
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="registrationDeadline"
+                    value={editedDetails.registrationDeadline}
+                    onChange={handleDetailsChange}
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Gift Exchange Date
+                  </label>
+                  <input
+                    type="date"
+                    name="giftExchangeDate"
+                    value={editedDetails.giftExchangeDate}
+                    onChange={handleDetailsChange}
+                    min={editedDetails.registrationDeadline.split("T")[0]}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsEditingDetails(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleDetailsSave}
+                  disabled={isSubmitting}
+                  isLoading={isSubmitting}
+                >
+                  Save Changes
                 </Button>
               </div>
             </div>

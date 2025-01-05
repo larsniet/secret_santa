@@ -6,30 +6,17 @@ export interface Participant {
   email: string;
   session: string;
   assignedTo?: Participant;
-  preferences: {
-    interests?: string;
+  preferences?: {
+    interests: string;
     sizes: {
-      clothing?: "XS" | "S" | "M" | "L" | "XL" | "XXL";
-      shoe?:
-        | "36"
-        | "37"
-        | "38"
-        | "39"
-        | "40"
-        | "41"
-        | "42"
-        | "43"
-        | "44"
-        | "45";
-      ring?: "5" | "6" | "7" | "8" | "9" | "10";
+      clothing: string; // 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | ''
+      shoe: string; // '36' to '45' | ''
+      ring: string; // '5' to '10' | ''
     };
-    wishlist?: string;
-    restrictions?: string;
-    ageGroup?: "18-25" | "26-35" | "36-45" | "46-55" | "56+";
-    gender?: "Male" | "Female" | "Non-binary" | "Prefer not to say";
-    favoriteColors?: string;
-    dislikes?: string;
-    hobbies?: string;
+    wishlist: string;
+    restrictions: string;
+    ageGroup: string; // '0-12' | '13-19' | '20-29' | '30-49' | '50+'
+    gender: string; // 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say'
   };
 }
 
@@ -119,17 +106,14 @@ class ParticipantService {
       response.data.preferences || {
         interests: "",
         sizes: {
-          clothing: undefined,
-          shoe: undefined,
-          ring: undefined,
+          clothing: "",
+          shoe: "",
+          ring: "",
         },
         wishlist: "",
         restrictions: "",
-        ageGroup: undefined,
-        gender: undefined,
-        favoriteColors: "",
-        dislikes: "",
-        hobbies: "",
+        ageGroup: "",
+        gender: "",
       }
     );
   }

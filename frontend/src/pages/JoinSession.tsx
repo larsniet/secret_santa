@@ -24,21 +24,46 @@ export const JoinSession: React.FC = () => {
     email: "",
     gender: "",
   });
-  const [preferences, setPreferences] = useState<Participant["preferences"]>({
+  const emptyPreferences: Required<NonNullable<Participant["preferences"]>> = {
     interests: "",
     sizes: {
-      clothing: undefined,
-      shoe: undefined,
-      ring: undefined,
+      clothing: "",
+      shoe: "",
+      ring: "",
     },
     wishlist: "",
     restrictions: "",
-    ageGroup: undefined,
-    gender: undefined,
-    favoriteColors: "",
-    dislikes: "",
-    hobbies: "",
-  });
+    ageGroup: "",
+    gender: "",
+  };
+
+  const [preferences, setPreferences] =
+    useState<Required<NonNullable<Participant["preferences"]>>>(
+      emptyPreferences
+    );
+
+  const handleUpdateField = (
+    field: keyof typeof preferences,
+    value: string
+  ) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleUpdateSize = (
+    field: keyof typeof preferences.sizes,
+    value: string
+  ) => {
+    setPreferences((prev) => ({
+      ...prev,
+      sizes: {
+        ...prev.sizes,
+        [field]: value,
+      },
+    }));
+  };
 
   const loadSession = useCallback(async () => {
     if (!code) return;
@@ -200,10 +225,8 @@ export const JoinSession: React.FC = () => {
         </label>
         <input
           type="text"
-          value={preferences?.interests}
-          onChange={(e) =>
-            setPreferences({ ...preferences, interests: e.target.value })
-          }
+          value={preferences.interests}
+          onChange={(e) => handleUpdateField("interests", e.target.value)}
           placeholder="e.g., Reading, Cooking, Sports"
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
         />
@@ -211,17 +234,8 @@ export const JoinSession: React.FC = () => {
       <div>
         <Select
           label="Clothing Size (optional)"
-          value={preferences?.sizes?.clothing || ""}
-          onChange={(e) =>
-            setPreferences({
-              ...preferences,
-              sizes: {
-                ...preferences?.sizes,
-                clothing: e.target
-                  .value as Participant["preferences"]["sizes"]["clothing"],
-              },
-            })
-          }
+          value={preferences.sizes.clothing}
+          onChange={(e) => handleUpdateSize("clothing", e.target.value)}
           options={[
             { value: "XS", label: "XS" },
             { value: "S", label: "S" },
@@ -235,17 +249,8 @@ export const JoinSession: React.FC = () => {
       <div>
         <Select
           label="Shoe Size (optional)"
-          value={preferences?.sizes?.shoe || ""}
-          onChange={(e) =>
-            setPreferences({
-              ...preferences,
-              sizes: {
-                ...preferences?.sizes,
-                shoe: e.target
-                  .value as Participant["preferences"]["sizes"]["shoe"],
-              },
-            })
-          }
+          value={preferences.sizes.shoe}
+          onChange={(e) => handleUpdateSize("shoe", e.target.value)}
           options={[
             { value: "36", label: "36" },
             { value: "37", label: "37" },
@@ -263,17 +268,8 @@ export const JoinSession: React.FC = () => {
       <div>
         <Select
           label="Ring Size (optional)"
-          value={preferences?.sizes?.ring || ""}
-          onChange={(e) =>
-            setPreferences({
-              ...preferences,
-              sizes: {
-                ...preferences?.sizes,
-                ring: e.target
-                  .value as Participant["preferences"]["sizes"]["ring"],
-              },
-            })
-          }
+          value={preferences.sizes.ring}
+          onChange={(e) => handleUpdateSize("ring", e.target.value)}
           options={[
             { value: "5", label: "5" },
             { value: "6", label: "6" },
@@ -289,10 +285,8 @@ export const JoinSession: React.FC = () => {
           Wishlist (optional)
         </label>
         <textarea
-          value={preferences?.wishlist}
-          onChange={(e) =>
-            setPreferences({ ...preferences, wishlist: e.target.value })
-          }
+          value={preferences.wishlist}
+          onChange={(e) => handleUpdateField("wishlist", e.target.value)}
           placeholder="List any specific items you'd like"
           rows={3}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
@@ -300,31 +294,46 @@ export const JoinSession: React.FC = () => {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          Restrictions or Allergies (optional)
+          Restrictions (optional)
         </label>
         <input
           type="text"
-          value={preferences?.restrictions}
-          onChange={(e) =>
-            setPreferences({ ...preferences, restrictions: e.target.value })
-          }
+          value={preferences.restrictions}
+          onChange={(e) => handleUpdateField("restrictions", e.target.value)}
           placeholder="e.g., No food items, allergies"
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
         />
       </div>
-      <div className="flex justify-between gap-4">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => setCurrentStep("success")}
-          className="flex-1"
-        >
-          Skip
-        </Button>
-        <Button type="submit" isLoading={isLoading} className="flex-1">
-          Save Preferences
-        </Button>
+      <div>
+        <Select
+          label="Age Group (optional)"
+          value={preferences.ageGroup}
+          onChange={(e) => handleUpdateField("ageGroup", e.target.value)}
+          options={[
+            { value: "0-12", label: "0-12" },
+            { value: "13-19", label: "13-19" },
+            { value: "20-29", label: "20-29" },
+            { value: "30-49", label: "30-49" },
+            { value: "50+", label: "50+" },
+          ]}
+        />
       </div>
+      <div>
+        <Select
+          label="Gender (optional)"
+          value={preferences.gender}
+          onChange={(e) => handleUpdateField("gender", e.target.value)}
+          options={[
+            { value: "Male", label: "Male" },
+            { value: "Female", label: "Female" },
+            { value: "Non-binary", label: "Non-binary" },
+            { value: "Prefer not to say", label: "Prefer not to say" },
+          ]}
+        />
+      </div>
+      <Button type="submit" isLoading={isLoading} className="w-full">
+        Save Preferences
+      </Button>
     </form>
   );
 

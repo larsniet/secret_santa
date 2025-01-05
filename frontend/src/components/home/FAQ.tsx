@@ -10,6 +10,16 @@ export const FAQ: React.FC = () => {
 
   const faqs: FAQItem[] = [
     {
+      question: "Is it really free?",
+      answer:
+        "Yes! Our Secret Santa platform is completely free for everyone. You can organize gift exchanges with up to 25 participants at no cost.",
+    },
+    {
+      question: "What's the maximum number of participants?",
+      answer:
+        "Each Secret Santa event can have up to 25 participants. This limit helps us maintain a high-quality experience for everyone while keeping the service free.",
+    },
+    {
       question: "How does the matching process work?",
       answer:
         "Our smart algorithm ensures that each participant is randomly assigned to give a gift to another participant, while making sure no one is assigned to themselves. The matching is completely random and fair.",
@@ -32,7 +42,7 @@ export const FAQ: React.FC = () => {
     {
       question: "Can I organize multiple events?",
       answer:
-        "Yes! Depending on your plan, you can organize multiple Secret Santa events simultaneously. Each event can have its own set of participants and settings.",
+        "Yes! You can organize multiple Secret Santa events simultaneously. Each event can have up to 25 participants and its own unique settings.",
     },
     {
       question: "What if someone drops out?",
@@ -42,7 +52,7 @@ export const FAQ: React.FC = () => {
   ];
 
   return (
-    <div className="bg-white py-16 sm:py-24">
+    <section className="py-16 sm:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2
@@ -103,6 +113,6 @@ export const FAQ: React.FC = () => {
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };

@@ -1,57 +1,81 @@
 import {
   Injectable,
   NotFoundException,
-  UnauthorizedException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Session, SessionStatus } from './session.schema';
-import { EventPlan } from '../users/user.schema';
+import { ParticipantsService } from '../participants/participants.service';
 
 @Injectable()
 export class SessionsService {
   constructor(
     @InjectModel(Session.name) private sessionModel: Model<Session>,
+    @Inject(forwardRef(() => ParticipantsService))
+    private participantsService: ParticipantsService,
   ) {}
+
+  private generateInviteCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
 
   async createSession(
     userId: string,
-    data: { name: string; plan: EventPlan },
+    createSessionDto: {
+      name: string;
+      budget: number;
+      registrationDeadline: Date;
+      giftExchangeDate: Date;
+    },
   ): Promise<Session> {
-    const trimmedName = data.name.trim();
-    if (!trimmedName) {
-      throw new BadRequestException('Session name cannot be empty');
-    }
+    // Validate dates
+    const now = new Date();
 
-    if (trimmedName.length > 50) {
+    if (new Date(createSessionDto.registrationDeadline) <= now) {
       throw new BadRequestException(
-        'Session name cannot be longer than 50 characters',
+        'Registration deadline must be in the future',
       );
     }
 
+    if (
+      new Date(createSessionDto.giftExchangeDate) <=
+      new Date(createSessionDto.registrationDeadline)
+    ) {
+      throw new BadRequestException(
+        'Gift exchange date must be after registration deadline',
+      );
+    }
+
+    // Validate budget
+    if (createSessionDto.budget <= 0) {
+      throw new BadRequestException('Budget must be greater than 0');
+    }
+
+    const inviteCode = this.generateInviteCode();
     const session = new this.sessionModel({
-      name: trimmedName,
-      creator: userId,
-      plan: data.plan,
-      status:
-        data.plan === EventPlan.FREE
-          ? SessionStatus.ACTIVE
-          : SessionStatus.PENDING_PAYMENT,
-      inviteCode: Math.random().toString(36).substring(2, 15),
+      ...createSessionDto,
+      creator: new Types.ObjectId(userId),
+      inviteCode,
+      status: SessionStatus.OPEN,
     });
-    return session.save();
+    const savedSession = await session.save();
+    return savedSession.toObject();
   }
 
   async getUserSessions(userId: string): Promise<Session[]> {
-    return this.sessionModel
-      .find({
-        creator: userId,
-        status: { $ne: SessionStatus.ARCHIVED }, // Don't show archived by default
-      })
-      .populate('participants')
+    const sessions = await this.sessionModel
+      .find({ creator: new Types.ObjectId(userId) })
       .sort({ createdAt: -1 })
       .exec();
+    return sessions.map((session) => session.toObject());
   }
 
   async getSession(id: string): Promise<Session> {
@@ -59,7 +83,7 @@ export class SessionsService {
     if (!session) {
       throw new NotFoundException('Session not found');
     }
-    return session;
+    return session.toObject();
   }
 
   async getSessionByInviteCode(inviteCode: string): Promise<Session> {
@@ -67,10 +91,7 @@ export class SessionsService {
     if (!session) {
       throw new NotFoundException('Session not found');
     }
-    if (session.status === SessionStatus.PENDING_PAYMENT) {
-      throw new BadRequestException('Session is pending payment');
-    }
-    return session;
+    return session.toObject();
   }
 
   async updateStatus(id: string, status: SessionStatus): Promise<Session> {
@@ -80,19 +101,26 @@ export class SessionsService {
     }
 
     // Validate status transitions
-    if (
-      session.status === SessionStatus.COMPLETED &&
-      status !== SessionStatus.ARCHIVED
-    ) {
-      throw new BadRequestException('Completed sessions can only be archived');
-    }
-    if (session.status === SessionStatus.ARCHIVED) {
-      throw new BadRequestException('Archived sessions cannot be updated');
-    }
-    if (status === SessionStatus.COMPLETED && !session.participants?.length) {
-      throw new BadRequestException(
-        'Cannot complete a session with no participants',
-      );
+    switch (session.status) {
+      case SessionStatus.OPEN:
+        if (status !== SessionStatus.LOCKED) {
+          throw new BadRequestException('Open sessions can only be locked');
+        }
+        if (!session.participants?.length) {
+          throw new BadRequestException(
+            'Cannot lock a session with no participants',
+          );
+        }
+        break;
+      case SessionStatus.LOCKED:
+        if (status !== SessionStatus.COMPLETED) {
+          throw new BadRequestException(
+            'Locked sessions can only be completed',
+          );
+        }
+        break;
+      case SessionStatus.COMPLETED:
+        throw new BadRequestException('Completed sessions cannot be updated');
     }
 
     session.status = status;
@@ -102,87 +130,61 @@ export class SessionsService {
     return session.save();
   }
 
-  async updateSessionStatus(
-    sessionId: string,
-    userId: string,
-    status: SessionStatus,
-  ): Promise<Session> {
-    const session = await this.getSession(sessionId);
-    if (session.creator.toString() !== userId) {
-      throw new UnauthorizedException('Not authorized to update this session');
-    }
-    return this.updateStatus(sessionId, status);
-  }
-
-  async deleteSession(sessionId: string, userId: string): Promise<void> {
-    const session = await this.getSession(sessionId);
-    if (session.creator.toString() !== userId) {
-      throw new UnauthorizedException('Not authorized to delete this session');
-    }
-    if (session.status === SessionStatus.COMPLETED) {
-      throw new BadRequestException('Completed sessions cannot be deleted');
-    }
-    await this.sessionModel.deleteOne({ _id: sessionId });
-  }
-
   async getActiveSessionCount(userId: string): Promise<number> {
     return this.sessionModel
       .countDocuments({
-        creator: userId,
-        status: SessionStatus.ACTIVE,
+        creator: new Types.ObjectId(userId),
+        status: SessionStatus.OPEN,
       })
       .exec();
-  }
-
-  async addParticipantToSession(
-    sessionId: string,
-    participantId: string,
-  ): Promise<void> {
-    const session = await this.sessionModel.findById(sessionId).exec();
-
-    if (!session) {
-      throw new NotFoundException('Session not found');
-    }
-
-    session.participants.push(new Types.ObjectId(participantId));
-    await session.save();
   }
 
   async removeParticipantFromSession(
     sessionId: string,
     participantId: string,
   ): Promise<void> {
-    const session = await this.sessionModel.findById(sessionId).exec();
-    session.participants = session.participants.filter(
-      (id) => id.toString() !== participantId,
+    await this.sessionModel.updateOne(
+      { _id: new Types.ObjectId(sessionId) },
+      { $pull: { participants: new Types.ObjectId(participantId) } },
     );
-    await session.save();
+  }
+
+  async addParticipantToSession(
+    sessionId: string,
+    participantId: string,
+  ): Promise<void> {
+    await this.sessionModel.updateOne(
+      { _id: new Types.ObjectId(sessionId) },
+      { $addToSet: { participants: new Types.ObjectId(participantId) } },
+    );
+  }
+
+  async deleteSession(id: string): Promise<void> {
+    const session = await this.sessionModel.findById(id).exec();
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+    await this.participantsService.deleteAllFromSession(id);
+    await session.deleteOne();
   }
 
   async updateSession(
-    sessionId: string,
-    userId: string,
-    updateData: { name: string },
-  ): Promise<Session> {
-    const session = await this.getSession(sessionId);
-
-    if (session.creator.toString() !== userId) {
-      throw new UnauthorizedException('Not authorized to update this session');
-    }
-
-    const trimmedName = updateData.name.trim();
-    if (!trimmedName) {
-      throw new BadRequestException('Session name cannot be empty');
-    }
-
-    if (trimmedName.length > 50) {
-      throw new BadRequestException(
-        'Session name cannot be longer than 50 characters',
-      );
-    }
-
-    return this.sessionModel
-      .findByIdAndUpdate(sessionId, { name: trimmedName }, { new: true })
+    id: string,
+    updateSessionDto: {
+      budget?: number;
+      registrationDeadline?: Date;
+      giftExchangeDate?: Date;
+      name?: string;
+    },
+  ) {
+    const session = await this.sessionModel
+      .findByIdAndUpdate(id, updateSessionDto, { new: true })
       .exec();
+
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    return session;
   }
 }

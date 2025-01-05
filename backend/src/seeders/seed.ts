@@ -4,7 +4,6 @@ import { Model, Types } from 'mongoose';
 import { getModelToken } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/user.schema';
-import { EventPlan } from '../users/user.schema';
 import { Participant } from '../participants/participant.schema';
 import { SessionsService } from '../sessions/sessions.service';
 import { Session, SessionStatus } from '../sessions/session.schema';
@@ -43,12 +42,14 @@ async function seed() {
   // Create session using the service
   const session = (await sessionsService.createSession(userId, {
     name: 'Family Christmas 2023',
-    plan: EventPlan.GROUP,
+    budget: 100,
+    registrationDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+    giftExchangeDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
   })) as Session & { _id: Types.ObjectId };
-  session.status = SessionStatus.ACTIVE;
+  session.status = SessionStatus.OPEN;
   await sessionModel.updateOne(
     { _id: session._id },
-    { status: SessionStatus.ACTIVE },
+    { status: SessionStatus.OPEN },
   );
   const sessionId = session._id.toString();
 
@@ -75,9 +76,6 @@ async function seed() {
         restrictions: 'No food items please',
         ageGroup: '26-35',
         gender: 'Male',
-        favoriteColors: 'Blue, Green',
-        dislikes: 'Socks',
-        hobbies: 'Cycling, Painting',
       },
     },
     {
@@ -94,9 +92,6 @@ async function seed() {
         restrictions: 'No scented items',
         ageGroup: '36-45',
         gender: 'Female',
-        favoriteColors: 'Red, Yellow',
-        dislikes: 'Candles',
-        hobbies: 'Gardening, Yoga',
       },
     },
     { name: 'Bob Wilson', email: 'bob@example.com' },
@@ -112,11 +107,8 @@ async function seed() {
         },
         wishlist: 'Art supplies or travel accessories',
         restrictions: 'None',
-        ageGroup: '18-25',
+        ageGroup: '20-29',
         gender: 'Female',
-        favoriteColors: 'Purple, Pink',
-        dislikes: 'None',
-        hobbies: 'Traveling, Music',
       },
     },
     { name: 'Charlie Davis', email: 'charlie@example.com' },
@@ -151,15 +143,11 @@ async function seed() {
     { $set: { isActive: true } },
   );
 
-  console.log('Seeding completed!');
-  console.log('User created:', user.email);
-  console.log('Session created:', session.name);
-  console.log('6 participants added to the session');
-
+  console.log('Seed completed successfully');
   await app.close();
 }
 
 seed().catch((error) => {
-  console.error('Seeding failed:', error);
+  console.error('Seed failed:', error);
   process.exit(1);
 });

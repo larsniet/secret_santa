@@ -17,13 +17,7 @@ export const setupAxiosInterceptors = (getToken: () => string | null) => {
     api.interceptors.response.eject(responseInterceptor);
   }
 
-  const publicEndpoints = [
-    "/auth/login",
-    "/auth/register",
-    "/sessions/join",
-    "/sessions/:sessionId/participants/:participantId",
-    "/sessions/:sessionId/participants/:participantId/preferences",
-  ];
+  const publicEndpoints = ["/auth/login", "/auth/register", "/sessions/join"];
 
   // Add request interceptor
   requestInterceptor = api.interceptors.request.use(

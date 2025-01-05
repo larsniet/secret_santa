@@ -43,8 +43,9 @@ export const Button: React.FC<ButtonProps> = ({
     "inline-flex items-center justify-center font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200";
   const width = fullWidth ? "w-full" : "";
   const border = variant !== "link" && variant !== "primary" ? "border" : "";
+  const loading = isLoading ? "opacity-50 cursor-not-allowed" : "";
 
-  const combinedClassName = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${width} ${border} ${className}`;
+  const combinedClassName = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${width} ${border} ${loading} ${className}`;
 
   if (to) {
     return (
@@ -63,11 +64,13 @@ export const Button: React.FC<ButtonProps> = ({
       {isLoading ? (
         <>
           <Loading
-            size="sm"
+            size="xs"
             centered={false}
-            className="-ml-1 mr-2 h-[13px] w-[13px]"
+            className={`${
+              variant === "primary" ? "border-white" : "border-[#B91C1C]"
+            } -ml-1 mr-2 h-[13px] w-[13px]`}
           />
-          Loading...
+          {children}
         </>
       ) : (
         children

@@ -19,31 +19,18 @@ export class Participant {
   @Prop({ type: Types.ObjectId, ref: 'Participant' })
   assignedTo?: Types.ObjectId;
 
-  @Prop({ type: Object, default: null })
+  @Prop({ type: Object })
   preferences?: {
-    interests?: string; // e.g., "Books, Sports, Cooking"
-    sizes?: {
-      clothing?: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'; // Standard clothing sizes
-      shoe?:
-        | '36'
-        | '37'
-        | '38'
-        | '39'
-        | '40'
-        | '41'
-        | '42'
-        | '43'
-        | '44'
-        | '45'; // Standard EU shoe sizes
-      ring?: '5' | '6' | '7' | '8' | '9' | '10'; // Standard ring sizes
+    interests: string; // e.g., "Books, Sports, Cooking"
+    sizes: {
+      clothing: string; // Standard clothing sizes: 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | ''
+      shoe: string; // Standard EU shoe sizes: '36'-'45' | ''
+      ring: string; // Standard ring sizes: '5'-'10' | ''
     };
-    wishlist?: string; // Specific items the participant wants
-    restrictions?: string; // e.g., "No alcohol, No peanuts"
-    ageGroup?: '18-25' | '26-35' | '36-45' | '46-55' | '56+'; // Defined groups
-    gender?: 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say'; // Defined options
-    favoriteColors?: string; // e.g., "Red, Blue, Green"
-    dislikes?: string; // e.g., "Socks, Candles"
-    hobbies?: string; // e.g., "Cycling, Painting, Gardening"
+    wishlist: string; // Specific items the participant wants
+    restrictions: string; // e.g., "No alcohol, No peanuts"
+    ageGroup: string; // Defined groups: '0-12' | '13-19' | '20-29' | '30-49' | '50+'
+    gender: string; // Defined options: 'Male' | 'Female' | 'Non-binary' | 'Prefer not to say'
   };
 }
 

@@ -82,7 +82,8 @@ class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    return token;
   }
 
   isAuthenticated(): boolean {

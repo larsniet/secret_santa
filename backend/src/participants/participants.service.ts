@@ -2,15 +2,16 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
   Inject,
   forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Participant } from './participant.schema';
-import { PLAN_LIMITS } from '../users/user.schema';
 import { SessionsService } from '../sessions/sessions.service';
-import { isValidObjectId } from 'mongoose';
+import { SessionStatus } from '../sessions/session.schema';
 
 @Injectable()
 export class ParticipantsService {
@@ -31,8 +32,19 @@ export class ParticipantsService {
     sessionId: string,
     participantId: string,
   ): Promise<Participant> {
-    if (!isValidObjectId(sessionId) || !isValidObjectId(participantId)) {
-      throw new BadRequestException('Invalid sessionId or participantId');
+    const session = await this.sessionsService.getSession(sessionId);
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    // Allow access if session is open or locked
+    if (
+      session.status !== SessionStatus.OPEN &&
+      session.status !== SessionStatus.LOCKED
+    ) {
+      throw new ForbiddenException(
+        'Cannot access participant details at this time',
+      );
     }
 
     const participant = await this.participantModel
@@ -47,7 +59,7 @@ export class ParticipantsService {
       throw new NotFoundException('Participant not found');
     }
 
-    return participant;
+    return participant.toObject();
   }
 
   async create(participantData: {
@@ -55,33 +67,43 @@ export class ParticipantsService {
     email: string;
     sessionId: string;
   }): Promise<Participant> {
-    // Get the session to check the plan
-    const session = await this.sessionsService.getSession(
-      participantData.sessionId,
-    );
-
-    // Get current participant count
     const currentParticipants = await this.findAllBySession(
       participantData.sessionId,
     );
-    const planLimit = PLAN_LIMITS[session.plan].maxParticipants;
 
-    // Check if adding another participant would exceed the plan limit
-    if (currentParticipants.length >= planLimit) {
+    if (currentParticipants.length >= 25) {
       throw new BadRequestException(
-        `Cannot add more participants. Your ${session.plan} plan is limited to ${planLimit} participants.`,
+        'Maximum limit of 25 participants reached for this session',
       );
     }
 
-    // Create a new participant
+    const session = await this.sessionsService.getSession(
+      participantData.sessionId,
+    );
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
     const participant = new this.participantModel({
-      name: participantData.name,
-      email: participantData.email,
+      ...participantData,
       session: new Types.ObjectId(participantData.sessionId),
+      preferences: {
+        interests: '',
+        sizes: {
+          clothing: '',
+          shoe: '',
+          ring: '',
+        },
+        wishlist: '',
+        restrictions: '',
+        ageGroup: '',
+        gender: '',
+      },
     });
+
     const savedParticipant = await participant.save();
 
-    // Update the session's participants array
+    // Update session's participants array
     await this.sessionsService.addParticipantToSession(
       participantData.sessionId,
       savedParticipant._id.toString(),
@@ -99,7 +121,18 @@ export class ParticipantsService {
   async deleteParticipant(
     sessionId: string,
     participantId: string,
+    userId?: string,
   ): Promise<void> {
+    // First get the session to check ownership
+    const session = await this.sessionsService.getSession(sessionId);
+
+    // Check if userId is provided and if the user is the session owner
+    if (userId && session.creator.toString() !== userId) {
+      throw new UnauthorizedException(
+        'Not authorized to remove participants from this session',
+      );
+    }
+
     const participant = await this.participantModel
       .findOne({
         _id: new Types.ObjectId(participantId),
@@ -132,103 +165,60 @@ export class ParticipantsService {
       })
       .exec();
 
-    // Get the preferences or fallback to undefined
-    const preferences = participant?.preferences;
+    if (!participant) {
+      throw new NotFoundException('Participant not found');
+    }
 
-    // Mock product data
-    const products = [
-      {
-        id: '1',
-        name: 'Book: Cooking Made Easy',
-        category: 'Cooking',
-        price: 15.99,
-        imageUrl: 'https://via.placeholder.com/150',
-      },
-      {
-        id: '2',
-        name: 'Basketball',
-        category: 'Sports',
-        price: 20.0,
-        imageUrl: 'https://via.placeholder.com/150',
-      },
-      {
-        id: '3',
-        name: 'Stylish T-Shirt',
-        category: 'Clothing',
-        price: 12.99,
-        imageUrl: 'https://via.placeholder.com/150',
-      },
-      {
-        id: '4',
-        name: 'Running Shoes',
-        category: 'Clothing',
-        price: 45.0,
-        imageUrl: 'https://via.placeholder.com/150',
-      },
-      {
-        id: '5',
-        name: 'Knitting Kit',
-        category: 'Hobbies',
-        price: 25.0,
-        imageUrl: 'https://via.placeholder.com/150',
-      },
-      {
-        id: '6',
-        name: 'Box of Chocolates',
-        category: 'Food',
-        price: 10.0,
-        imageUrl: 'https://via.placeholder.com/150',
-      },
-    ];
+    // Get the preferences
+    const preferences = participant.preferences;
+    if (!preferences) {
+      throw new BadRequestException('Participant has no preferences set');
+    }
 
-    // Filter products based on preferences if they exist
-    const matchingProducts = preferences
-      ? products.filter((product) => {
-          if (
-            preferences.interests &&
-            product.category
-              .toLowerCase()
-              .includes(preferences.interests.toLowerCase())
-          ) {
-            return true;
-          }
-          if (
-            preferences.sizes?.clothing &&
-            product.name.toLowerCase().includes('shirt')
-          ) {
-            return true;
-          }
-          if (
-            preferences.sizes?.shoe &&
-            product.name.toLowerCase().includes('shoes')
-          ) {
-            return true;
-          }
-          if (
-            preferences.hobbies &&
-            product.category
-              .toLowerCase()
-              .includes(preferences.hobbies.toLowerCase())
-          ) {
-            return true;
-          }
-          return false;
-        })
-      : products; // If no preferences, return the entire product list
-
-    // If no matching products and preferences exist, fallback to all products
-    const finalProducts =
-      matchingProducts.length > 0 ? matchingProducts : products;
-
-    // Implement pagination
-    const pageSize = 3;
-    const startIndex = (page - 1) * pageSize;
-    const paginatedProducts = finalProducts.slice(
-      startIndex,
-      startIndex + pageSize,
+    // Clean up sizes object by removing undefined values and ensuring string values
+    const sizes = Object.entries(preferences.sizes || {}).reduce(
+      (acc, [key, value]) => {
+        acc[key] = value?.toString() || '';
+        return acc;
+      },
+      {
+        clothing: '',
+        shoe: '',
+        ring: '',
+      } as Record<string, string>,
     );
 
-    return paginatedProducts;
+    const requestBody = {
+      interests: preferences.interests || '',
+      sizes,
+      wishlist: preferences.wishlist || '',
+      restrictions: preferences.restrictions || '',
+      ageGroup: preferences.ageGroup || '30-49',
+      gender: preferences.gender || 'Prefer not to say',
+    };
+
+    try {
+      // Call the matching module API
+      const response = await fetch(
+        `${process.env.MATCHING_MODULE_URL}/match-products?page=${page}&pageSize=6`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Matching module error: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting product recommendations:', error);
+      throw new Error('Failed to get product recommendations');
+    }
   }
 
   async updateAssignment(
@@ -250,22 +240,34 @@ export class ParticipantsService {
     participantId: string,
     preferences: Participant['preferences'],
   ): Promise<Participant> {
+    const session = await this.sessionsService.getSession(sessionId);
+    if (!session) {
+      throw new NotFoundException('Session not found');
+    }
+
+    // Allow updates if session is open or locked
+    if (
+      session.status !== SessionStatus.OPEN &&
+      session.status !== SessionStatus.LOCKED
+    ) {
+      throw new ForbiddenException('Cannot update preferences at this time');
+    }
+
     const participant = await this.participantModel
-      .findOne({
-        _id: new Types.ObjectId(participantId),
-        session: new Types.ObjectId(sessionId),
-      })
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(participantId),
+          session: new Types.ObjectId(sessionId),
+        },
+        { preferences },
+        { new: true },
+      )
       .exec();
 
     if (!participant) {
       throw new NotFoundException('Participant not found');
     }
 
-    participant.preferences = {
-      ...participant.preferences,
-      ...preferences,
-    };
-
-    return participant.save();
+    return participant.toObject();
   }
 }

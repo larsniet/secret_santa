@@ -25,9 +25,9 @@ export class AssignmentsService {
         'Only the creator can create assignments',
       );
     }
-    if (session.status !== SessionStatus.ACTIVE) {
+    if (session.status !== SessionStatus.OPEN) {
       throw new UnauthorizedException(
-        'Can only create assignments for active sessions',
+        'Can only create assignments for open sessions',
       );
     }
 
@@ -39,7 +39,15 @@ export class AssignmentsService {
       );
     }
 
-    const shuffled = [...participants].sort(() => Math.random() - 0.5);
+    function shuffleArray<T>(array: T[]): T[] {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    const shuffled = shuffleArray([...participants]);
     const assignments = [];
     const emailPromises = [];
 
@@ -71,12 +79,8 @@ export class AssignmentsService {
     // Wait for all emails to be sent
     await Promise.all(emailPromises);
 
-    // Update session status to completed
-    await this.sessionsService.updateSessionStatus(
-      sessionId,
-      userId,
-      SessionStatus.COMPLETED,
-    );
+    // Update session status to locked
+    await this.sessionsService.updateStatus(sessionId, SessionStatus.LOCKED);
 
     return assignments;
   }

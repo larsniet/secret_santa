@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Layout } from "../components/layout/Layout";
 import { BackButton } from "../components/common/BackButton";
 import { useAlert } from "../contexts/AlertContext";
@@ -8,49 +8,82 @@ import { Loading } from "../components/common/Loading";
 import { Participant } from "../services/participant.service";
 import { Select } from "../components/common/Select";
 import { Button } from "../components/common/Button";
+import { sessionService } from "../services/session.service";
+import { Session } from "../services/session.service";
 
 export const ParticipantPreferences: React.FC = () => {
   const { sessionId, participantId } = useParams<{
     sessionId: string;
     participantId: string;
   }>();
+  const navigate = useNavigate();
   const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [preferences, setPreferences] = useState<Participant["preferences"]>({
+  const [session, setSession] = useState<Session | null>(null);
+  const [participant, setParticipant] = useState<Participant | null>(null);
+  const [preferences, setPreferences] = useState<
+    Required<NonNullable<Participant["preferences"]>>
+  >({
     interests: "",
     sizes: {
-      clothing: undefined,
-      shoe: undefined,
-      ring: undefined,
+      clothing: "",
+      shoe: "",
+      ring: "",
     },
     wishlist: "",
     restrictions: "",
-    ageGroup: undefined,
-    gender: undefined,
-    favoriteColors: "",
-    dislikes: "",
-    hobbies: "",
+    ageGroup: "",
+    gender: "",
   });
 
   useEffect(() => {
     loadPreferences();
   }, [sessionId, participantId]);
 
+  useEffect(() => {
+    if (!session) return;
+
+    // Only redirect if session is not active or locked
+    if (session.status !== "open" && session.status !== "locked") {
+      navigate("/dashboard");
+      return;
+    }
+  }, [session, navigate]);
+
   const loadPreferences = async () => {
     if (!sessionId || !participantId) return;
 
     try {
-      const data = await participantService.getPreferences(
+      setIsLoading(true);
+      const sessionData = await sessionService.getSession(sessionId);
+      setSession(sessionData);
+      const participantData = await participantService.getParticipant(
         sessionId,
         participantId
       );
-      setPreferences(data);
+      setParticipant(participantData);
+      if (participantData.preferences) {
+        // Ensure all fields have at least empty string values
+        setPreferences({
+          interests: participantData.preferences.interests || "",
+          sizes: {
+            clothing: participantData.preferences.sizes?.clothing || "",
+            shoe: participantData.preferences.sizes?.shoe || "",
+            ring: participantData.preferences.sizes?.ring || "",
+          },
+          wishlist: participantData.preferences.wishlist || "",
+          restrictions: participantData.preferences.restrictions || "",
+          ageGroup: participantData.preferences.ageGroup || "",
+          gender: participantData.preferences.gender || "",
+        });
+      }
     } catch (err: any) {
       showAlert(
         "error",
         err.response?.data?.message || "Failed to load preferences"
       );
+      navigate("/dashboard");
     } finally {
       setIsLoading(false);
     }
@@ -58,16 +91,23 @@ export const ParticipantPreferences: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sessionId || !participantId) return;
+    if (!session || !participant) return;
+
+    // Only allow updates if session is open or locked
+    if (session.status !== "open" && session.status !== "locked") {
+      showAlert("error", "Cannot update preferences for this session");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       await participantService.updatePreferences(
-        sessionId,
-        participantId,
+        session._id,
+        participant._id,
         preferences
       );
-      showAlert("success", "Preferences saved successfully!");
+      showAlert("success", "Preferences updated successfully!");
+      navigate(`/sessions/${session._id}/participants/${participant._id}`);
     } catch (err: any) {
       showAlert(
         "error",
@@ -112,10 +152,10 @@ export const ParticipantPreferences: React.FC = () => {
                 type="text"
                 value={preferences.interests}
                 onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
+                  setPreferences((prev) => ({
+                    ...prev,
                     interests: e.target.value,
-                  })
+                  }))
                 }
                 placeholder="e.g., Reading, Cooking, Sports"
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
@@ -126,16 +166,15 @@ export const ParticipantPreferences: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 label="Clothing Size"
-                value={preferences.sizes?.clothing || ""}
+                value={preferences.sizes.clothing}
                 onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
+                  setPreferences((prev) => ({
+                    ...prev,
                     sizes: {
-                      ...preferences.sizes,
-                      clothing: e.target
-                        .value as Participant["preferences"]["sizes"]["clothing"],
+                      ...prev.sizes,
+                      clothing: e.target.value,
                     },
-                  })
+                  }))
                 }
                 options={[
                   { value: "XS", label: "XS" },
@@ -148,16 +187,15 @@ export const ParticipantPreferences: React.FC = () => {
               />
               <Select
                 label="Shoe Size"
-                value={preferences.sizes?.shoe || ""}
+                value={preferences.sizes.shoe}
                 onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
+                  setPreferences((prev) => ({
+                    ...prev,
                     sizes: {
-                      ...preferences.sizes,
-                      shoe: e.target
-                        .value as Participant["preferences"]["sizes"]["shoe"],
+                      ...prev.sizes,
+                      shoe: e.target.value,
                     },
-                  })
+                  }))
                 }
                 options={[
                   { value: "36", label: "36" },
@@ -174,16 +212,15 @@ export const ParticipantPreferences: React.FC = () => {
               />
               <Select
                 label="Ring Size"
-                value={preferences.sizes?.ring || ""}
+                value={preferences.sizes.ring}
                 onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
+                  setPreferences((prev) => ({
+                    ...prev,
                     sizes: {
-                      ...preferences.sizes,
-                      ring: e.target
-                        .value as Participant["preferences"]["sizes"]["ring"],
+                      ...prev.sizes,
+                      ring: e.target.value,
                     },
-                  })
+                  }))
                 }
                 options={[
                   { value: "5", label: "5" },
@@ -194,80 +231,78 @@ export const ParticipantPreferences: React.FC = () => {
                   { value: "10", label: "10" },
                 ]}
               />
-            </div>
-
-            {/* Favorite Colors */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Favorite Colors
-              </label>
-              <input
-                type="text"
-                value={preferences.favoriteColors}
+              {/* Gender */}
+              <Select
+                label="Gender"
+                value={preferences.gender}
                 onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    favoriteColors: e.target.value,
-                  })
+                  setPreferences((prev) => ({
+                    ...prev,
+                    gender: e.target.value,
+                  }))
                 }
-                placeholder="e.g., Red, Blue, Green"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+                options={[
+                  { value: "Male", label: "Male" },
+                  { value: "Female", label: "Female" },
+                  { value: "Non-binary", label: "Non-binary" },
+                  { value: "Prefer not to say", label: "Prefer not to say" },
+                ]}
               />
             </div>
 
-            {/* Dislikes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Dislikes
-              </label>
-              <input
-                type="text"
-                value={preferences.dislikes}
-                onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    dislikes: e.target.value,
-                  })
-                }
-                placeholder="e.g., Socks, Candles"
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
-              />
-            </div>
-
-            {/* Gender */}
+            {/* Age Group */}
             <Select
-              label="Gender"
-              value={preferences.gender || ""}
+              label="Age Group"
+              value={preferences.ageGroup}
               onChange={(e) =>
-                setPreferences({
-                  ...preferences,
-                  gender: e.target
-                    .value as Participant["preferences"]["gender"],
-                })
+                setPreferences((prev) => ({
+                  ...prev,
+                  ageGroup: e.target.value,
+                }))
               }
               options={[
-                { value: "Male", label: "Male" },
-                { value: "Female", label: "Female" },
-                { value: "Non-binary", label: "Non-binary" },
-                { value: "Prefer not to say", label: "Prefer not to say" },
+                { value: "0-12", label: "Child (0-12)" },
+                { value: "13-19", label: "Teen (13-19)" },
+                { value: "20-29", label: "Young Adult (20-29)" },
+                { value: "30-49", label: "Adult (30-49)" },
+                { value: "50+", label: "Senior (50+)" },
               ]}
             />
 
-            {/* Hobbies */}
+            {/* Wishlist */}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Hobbies
+                Wishlist
               </label>
               <textarea
-                value={preferences.hobbies}
+                value={preferences.wishlist}
                 onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    hobbies: e.target.value,
-                  })
+                  setPreferences((prev) => ({
+                    ...prev,
+                    wishlist: e.target.value,
+                  }))
                 }
-                placeholder="e.g., Gardening, Cycling"
-                rows={3}
+                placeholder="List specific items you'd like to receive"
+                rows={4}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
+              />
+            </div>
+
+            {/* Restrictions */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Restrictions
+              </label>
+              <textarea
+                value={preferences.restrictions}
+                onChange={(e) =>
+                  setPreferences((prev) => ({
+                    ...prev,
+                    restrictions: e.target.value,
+                  }))
+                }
+                placeholder="Any allergies, dislikes, or things to avoid"
+                rows={4}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#B91C1C] focus:border-[#B91C1C] sm:text-sm"
               />
             </div>

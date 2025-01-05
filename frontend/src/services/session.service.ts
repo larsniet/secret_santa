@@ -1,5 +1,4 @@
 import { api } from "./api";
-import { EventPlan } from "../types/plans";
 
 export interface Session {
   _id: string;
@@ -7,11 +6,29 @@ export interface Session {
   creator: string;
   participants: string[];
   inviteCode: string;
-  status: "pending_payment" | "active" | "completed" | "archived";
-  plan: EventPlan;
+  status: "open" | "locked" | "completed";
+  budget: number;
+  registrationDeadline: string;
+  giftExchangeDate: string;
+  timezone: string;
   createdAt: string;
   completedAt?: string;
-  paymentId?: string;
+}
+
+export interface CreateSessionDto {
+  name: string;
+  budget: number;
+  registrationDeadline: string;
+  giftExchangeDate: string;
+  timezone: string;
+}
+
+export interface UpdateSessionDto {
+  name?: string;
+  budget?: number;
+  registrationDeadline?: string;
+  giftExchangeDate?: string;
+  timezone?: string;
 }
 
 class SessionService {
@@ -20,10 +37,7 @@ class SessionService {
     return response.data;
   }
 
-  async createSession(data: {
-    name: string;
-    plan: EventPlan;
-  }): Promise<Session> {
+  async createSession(data: CreateSessionDto): Promise<Session> {
     const response = await api.post<Session>("/sessions", data);
     return response.data;
   }
@@ -48,20 +62,20 @@ class SessionService {
     return response.data;
   }
 
-  async createCheckoutSession(sessionId: string): Promise<{ id: string }> {
-    const response = await api.post<{ id: string }>(`/subscriptions/checkout`, {
-      sessionId,
-    });
-    return response.data;
-  }
-
-  async updateSession(id: string, data: { name: string }): Promise<Session> {
+  async updateSession(id: string, data: UpdateSessionDto): Promise<Session> {
     const response = await api.patch<Session>(`/sessions/${id}`, data);
     return response.data;
   }
 
   async deleteSession(id: string): Promise<void> {
-    await api.delete(`/sessions/${id}`);
+    console.log("Deleting session:", id);
+    try {
+      await api.delete(`/sessions/${id}`);
+      console.log("Session deleted successfully");
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      throw error;
+    }
   }
 }
 

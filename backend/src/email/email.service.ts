@@ -128,21 +128,6 @@ export class EmailService {
               ? `<li><strong>Gender:</strong> ${participant.preferences.gender}</li>`
               : ''
           }
-          ${
-            participant.preferences.favoriteColors
-              ? `<li><strong>Favorite Colors:</strong> ${participant.preferences.favoriteColors}</li>`
-              : ''
-          }
-          ${
-            participant.preferences.dislikes
-              ? `<li><strong>Dislikes:</strong> ${participant.preferences.dislikes}</li>`
-              : ''
-          }
-          ${
-            participant.preferences.hobbies
-              ? `<li><strong>Hobbies:</strong> ${participant.preferences.hobbies}</li>`
-              : ''
-          }
         `;
         preferencesBlock = `
           <div
@@ -164,10 +149,15 @@ export class EmailService {
         `;
       }
 
+      const updatePreferencesLink = `${this.configService.get<string>(
+        'FRONTEND_URL',
+      )}/sessions/${participant.session}/participants/${participant._id.toString()}/preferences`;
+
       const html = template
         .replace(/{{ss_name}}/g, participant.name)
         .replace(/{{ss_target}}/g, recipientName)
-        .replace(/{{ss_preferences_block}}/g, preferencesBlock);
+        .replace(/{{ss_preferences_block}}/g, preferencesBlock)
+        .replace(/{{update_preferences_link}}/g, updatePreferencesLink);
 
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
@@ -175,43 +165,9 @@ export class EmailService {
         subject: 'Your Secret Santa Assignment! 🎄',
         html,
       });
-
-      console.log(`Email sent to ${participant.email}`);
     } catch (error) {
       console.error(`Error sending email to ${participant.email}:`, error);
       throw error;
-    }
-  }
-
-  async sendApologyEmail(): Promise<void> {
-    const baseUrl =
-      'https://plansecretsanta.com/sessions/67604f09f82066919c2a7557/participants/';
-    const recipients = [];
-
-    const template = await this.getEmailTemplate('apology_email');
-
-    for (const recipient of recipients) {
-      try {
-        const html = template
-          .replace(/{{ss_name}}/g, recipient.name)
-          .replace(
-            /{{update_preferences_link}}/g,
-            recipient.updatePreferencesLink,
-          );
-
-        await this.sendEmail({
-          to: recipient.email,
-          subject: 'Oopsie! Update Your Preferences 🎄',
-          html,
-        });
-
-        console.log(`Apology email sent to ${recipient.email}`);
-      } catch (error) {
-        console.error(
-          `Error sending apology email to ${recipient.email}:`,
-          error,
-        );
-      }
     }
   }
 }

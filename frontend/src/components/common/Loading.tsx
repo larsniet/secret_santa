@@ -2,7 +2,7 @@ import React from "react";
 
 interface LoadingProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   centered?: boolean;
 }
 
@@ -12,6 +12,7 @@ export const Loading: React.FC<LoadingProps> = ({
   centered = true,
 }) => {
   const sizeClasses = {
+    xs: "h-4 w-4",
     sm: "h-8 w-8",
     md: "h-12 w-12",
     lg: "h-16 w-16",

@@ -1,14 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { EventPlan } from '../users/user.schema';
 
 export type SessionDocument = Session & Document;
 
 export enum SessionStatus {
-  PENDING_PAYMENT = 'pending_payment',
-  ACTIVE = 'active',
-  COMPLETED = 'completed',
-  ARCHIVED = 'archived',
+  OPEN = 'open', // Initial state: people can join
+  LOCKED = 'locked', // Assignments created: no more joins allowed
+  COMPLETED = 'completed', // Event is over
 }
 
 @Schema({ timestamps: true })
@@ -28,23 +26,24 @@ export class Session {
   @Prop({
     required: true,
     enum: Object.values(SessionStatus),
-    default: SessionStatus.PENDING_PAYMENT,
+    default: SessionStatus.OPEN,
   })
   status: SessionStatus;
 
-  @Prop({
-    required: true,
-    type: String,
-    enum: EventPlan,
-    default: EventPlan.FREE,
-  })
-  plan: EventPlan;
+  @Prop({ required: true, type: Number, min: 0 })
+  budget: number;
+
+  @Prop({ required: true, type: Date })
+  registrationDeadline: Date;
+
+  @Prop({ required: true, type: Date })
+  giftExchangeDate: Date;
+
+  @Prop({ required: true, type: String })
+  timezone: string;
 
   @Prop()
   completedAt?: Date;
-
-  @Prop()
-  paymentId?: string;
 }
 
 export const SessionSchema = SchemaFactory.createForClass(Session);
